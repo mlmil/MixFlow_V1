@@ -1,0 +1,60 @@
+/* MixStation ComfyUI Theme & Design Tokens */
+:root {
+  --bg-darkest: #0e1013;
+  --bg-dark: #14171c;
+  --bg-card: #1b1f26;
+  --bg-card-hover: #222731;
+  --bg-card-active: #29303c;
+  --bg-input: #111317;
+  --border-subtle: #2b313d;
+  --border-strong: #3b4455;
+  --border-accent: #4a5568;
+
+  --text-primary: #f0f3f8;
+  --text-secondary: #9aa5b6;
+  --text-muted: #626d7f;
+
+  /* Cable & Signal Category Colors */
+  --color-vocal: #00e5ff;
+  --color-guitar: #ff9100;
+  --color-keys: #00e676;
+  --color-playback: #d500f9;
+  --color-iem: #ffd600;
+  --color-main: #ff3366;
+  --color-wire-default: #8094ad;
+
+  /* Status Colors */
+  --status-success: #00e676;
+  --status-warning: #ffab00;
+  --status-error: #ff3366;
+  --status-info: #00b0ff;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-node: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--border-subtle);
+  --shadow-node-selected: 0 12px 35px rgba(0, 0, 0, 0.8), 0 0 0 2px var(--color-vocal);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-darkest);
+  color: var(--text-primary);
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MixFlow | XR18 Visual Node Router & Linter</title>
+  <link rel="stylesheet" href="./src/styles/theme.css">
+  <link rel="stylesheet" href="./src/styles/canvas.css">
+  <link rel="stylesheet" href="./src/styles/copilot.css">
+  <link rel="stylesheet" href="./src/styles/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Top App Navigation Bar -->
+  <header class="app-header">
+    <div class="brand-group">
+      <span class="brand-logo">🎛️ MixFlow</span>
+      <span class="brand-badge">XR18 / X-Air</span>
+    </div>
+
+    <div class="toolbar-group">
+      <div style="display: flex; align-items: center; gap: 4px;">
+        <select id="template-select" class="tool-btn" style="max-width: 260px;"></select>
+        <button id="btn-manage-templates" class="tool-btn" title="Edit, Rename, Clone, and Overwrite Templates">✏️ Edit Templates</button>
+      </div>
+
+      <button id="btn-inspector-toggle" class="tool-btn" title="Toggle Channel Inspector">🔍 Inspector</button>
+      <button id="btn-tone-gen" class="tool-btn" title="Web Audio Test Tone Generator">🔊 Tone Gen</button>
+      <button id="btn-add-node" class="tool-btn">➕ Add Node</button>
+
+      <div id="status-pill" class="status-pill">
+        <div class="status-dot valid"></div>
+        <span id="status-text">Routing Clean</span>
+      </div>
+
+      <button id="btn-export-json" class="tool-btn">💾 Mixing Station JSON</button>
+      <button id="btn-export-osc" class="tool-btn">📄 XR18 .xair</button>
+      <button id="btn-import" class="tool-btn">📂 Import</button>
+      <button id="btn-copilot-toggle" class="tool-btn primary">🤖 AI Co-Pilot</button>
+    </div>
+  </header>
+
+  <!-- Interactive Node Graph Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Bottom Navigation & Pan/Zoom Controls -->
+  <footer class="app-footer">
+    <button id="btn-zoom-out" class="canvas-ctrl-btn">➖</button>
+    <span id="zoom-level" class="zoom-level-text">100%</span>
+    <button id="btn-zoom-in" class="canvas-ctrl-btn">➕</button>
+    <button id="btn-zoom-fit" class="canvas-ctrl-btn">🎯 Fit View</button>
+    <button id="btn-clear-canvas" class="canvas-ctrl-btn" style="color: var(--status-error);">🗑️ Clear</button>
+  </footer>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

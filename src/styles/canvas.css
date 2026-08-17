@@ -1,0 +1,293 @@
+/* Canvas & Node Graph Styling */
+.canvas-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-darkest);
+  background-image: 
+    radial-gradient(circle, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.canvas-viewport {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* SVG Connection Wire Overlay */
+.connections-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 10000px;
+  height: 10000px;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.wire-path {
+  fill: none;
+  stroke: var(--color-wire-default);
+  stroke-width: 3.5px;
+  stroke-linecap: round;
+  transition: stroke 0.15s ease, stroke-width 0.15s ease;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.wire-path:hover {
+  stroke-width: 5.5px;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
+}
+
+.wire-active {
+  stroke-dasharray: 8 6;
+  animation: wire-flow 1.2s linear infinite;
+}
+
+@keyframes wire-flow {
+  from { stroke-dashoffset: 28; }
+  to { stroke-dashoffset: 0; }
+}
+
+.wire-pending {
+  stroke: var(--color-vocal);
+  stroke-width: 3px;
+  stroke-dasharray: 4 4;
+}
+
+/* Node Styling */
+.graph-node {
+  position: absolute;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-node);
+  min-width: 260px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-subtle);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  z-index: 10;
+}
+
+.graph-node:hover {
+  border-color: var(--border-strong);
+}
+
+.graph-node.selected {
+  box-shadow: var(--shadow-node-selected);
+  border-color: var(--color-vocal);
+  z-index: 20;
+}
+
+.graph-node.node-error {
+  border-color: var(--status-error);
+  box-shadow: 0 0 15px rgba(255, 51, 102, 0.4), 0 0 0 1px var(--status-error);
+}
+
+.graph-node.node-warning {
+  border-color: var(--status-warning);
+  box-shadow: 0 0 15px rgba(255, 171, 0, 0.3), 0 0 0 1px var(--status-warning);
+}
+
+.node-header {
+  padding: 10px 14px;
+  background: var(--bg-dark);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: grab;
+  user-select: none;
+}
+
+.graph-node:active .node-header {
+  cursor: grabbing;
+}
+
+.node-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.node-badge {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-wire-default);
+}
+
+.node-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.3px;
+}
+
+.node-category {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.node-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Ports & Sockets */
+.ports-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ports-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.ports-column.inputs {
+  align-items: flex-start;
+}
+
+.ports-column.outputs {
+  align-items: flex-end;
+}
+
+.port-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  position: relative;
+}
+
+.port-socket {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg-darkest);
+  border: 2px solid var(--color-wire-default);
+  cursor: crosshair;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.port-socket:hover {
+  transform: scale(1.35);
+  border-color: #fff;
+  background-color: var(--color-vocal);
+}
+
+.port-socket.connected {
+  background-color: var(--color-vocal);
+  box-shadow: 0 0 6px var(--color-vocal);
+}
+
+.port-label {
+  white-space: nowrap;
+}
+
+/* Controls within Nodes */
+.node-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.node-control-row label {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.node-input, .node-select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 4px 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  outline: none;
+  width: 100%;
+}
+
+.node-input:focus, .node-select:focus {
+  border-color: var(--color-vocal);
+}
+
+.switch-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.switch-box {
+  width: 32px;
+  height: 18px;
+  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.switch-knob {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.switch-toggle.active .switch-box {
+  background: rgba(0, 229, 255, 0.2);
+  border-color: var(--color-vocal);
+}
+
+.switch-toggle.active .switch-knob {
+  transform: translateX(14px);
+  background: var(--color-vocal);
+}
+
+.phantom-btn {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.phantom-btn.active {
+  background: rgba(255, 51, 102, 0.2);
+  border-color: var(--status-error);
+  color: var(--status-error);
+  box-shadow: 0 0 8px rgba(255, 51, 102, 0.4);
+}
