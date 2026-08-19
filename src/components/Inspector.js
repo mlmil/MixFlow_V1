@@ -94,6 +94,9 @@ export class Inspector {
       <!-- Live Controls Box -->
       <div class="inspector-controls-box" style="background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; display: flex; flex-direction: column; gap: 8px;">
         ${this.renderNodeSpecificInspectorControls(node)}
+        <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+          <button class="tool-btn btn-clear-node-wires" style="font-size:10px; padding:3px 8px; color:var(--status-error);" title="Disconnect all cables attached to this node">✂️ Clear Node Wires</button>
+        </div>
       </div>
 
       <!-- Tone Generator Preview Box -->
@@ -132,6 +135,16 @@ export class Inspector {
         </div>
       `}
     `;
+
+    // Bind Clear Node Wires Button
+    const clearWiresBtn = this.inspectorContent.querySelector('.btn-clear-node-wires');
+    if (clearWiresBtn) {
+      clearWiresBtn.addEventListener('click', () => {
+        const toRemove = this.graph.connections.filter(c => c.fromNodeId === node.id || c.toNodeId === node.id);
+        toRemove.forEach(c => this.graph.disconnect(c.id));
+        this.renderSelection(node.id);
+      });
+    }
 
     // Bind Tone Generator Button
     const toneBtn = this.inspectorContent.querySelector('.btn-tone-toggle');

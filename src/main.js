@@ -174,6 +174,16 @@ function initApp() {
     });
   }
 
+  // Quick Reset Button (1-Click Restore Clean Template)
+  const btnResetRig = document.getElementById('btn-reset-rig');
+  if (btnResetRig) {
+    btnResetRig.addEventListener('click', () => {
+      if (confirm('Reset canvas to clean default template wiring?')) {
+        loadTemplateIntoCanvas(activeTemplateId);
+      }
+    });
+  }
+
   // Open Template Editor & Manager Modal
   const btnManageTemplates = document.getElementById('btn-manage-templates');
   if (btnManageTemplates) {

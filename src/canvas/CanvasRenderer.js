@@ -271,12 +271,15 @@ export class CanvasRenderer {
       path.setAttribute('d', d);
       path.style.stroke = conn.color || 'var(--color-vocal)';
 
-      // Right-click or double-click to delete wire
-      path.addEventListener('contextmenu', (e) => {
+      // Click or right-click to delete wire
+      const removeWire = (e) => {
         e.preventDefault();
         e.stopPropagation();
         this.graph.disconnect(conn.id);
-      });
+      };
+
+      path.addEventListener('click', removeWire);
+      path.addEventListener('contextmenu', removeWire);
 
       this.svgLayer.appendChild(path);
     });
