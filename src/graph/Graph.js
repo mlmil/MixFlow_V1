@@ -67,6 +67,19 @@ export class Graph {
       return null;
     }
 
+    // Strict Type Safety:
+    // USB outputs (from DAW tracks or USB sends) can ONLY connect to USB inputs
+    if (fromPort.type === 'usb' && toPort.type !== 'usb') {
+      console.warn(`MixFlow: Blocked invalid connection from USB port '${fromPort.name}' to analog/incompatible port '${toPort.name}'`);
+      return null;
+    }
+
+    // Analog outputs (from Stage preamps) can only connect to analog audio in or USB send matrix in
+    if (fromPort.type === 'audio' && toPort.type === 'usb') {
+      console.warn(`MixFlow: Blocked invalid connection from Analog audio port '${fromPort.name}' to USB port '${toPort.name}'`);
+      return null;
+    }
+
     // Check duplicate
     const exists = this.connections.some(
       c => c.fromNodeId === fromNodeId && c.fromPortId === fromPortId &&
@@ -100,12 +113,13 @@ export class Graph {
     const toNode = this.nodes.get(conn.toNodeId);
 
     if (fromNode) {
-      const p = fromNode.getPort(conn.fromPortId);
-      if (p) p.connections.delete(conn);
+      const fromPort = fromNode.getPort(conn.fromPortId);
+      if (fromPort) fromPort.connections.delete(conn);
     }
+
     if (toNode) {
-      const p = toNode.getPort(conn.toPortId);
-      if (p) p.connections.delete(conn);
+      const toPort = toNode.getPort(conn.toPortId);
+      if (toPort) toPort.connections.delete(conn);
     }
 
     this.connections.splice(idx, 1);
@@ -122,28 +136,27 @@ export class Graph {
 
   toJSON() {
     return {
+      version: 1,
       nodes: Array.from(this.nodes.values()).map(n => n.toJSON()),
       connections: this.connections.map(c => c.toJSON())
     };
   }
 
-  static fromJSON(data, nodeRegistry = null) {
+  static fromJSON(data, registry = null) {
     const graph = new Graph();
-    if (!data) return graph;
+    if (!data || !data.nodes) return graph;
 
-    if (Array.isArray(data.nodes)) {
-      data.nodes.forEach(nodeData => {
-        let node;
-        if (nodeRegistry && nodeRegistry[nodeData.category]) {
-          node = nodeRegistry[nodeData.category].fromJSON(nodeData);
-        } else {
-          node = Node.fromJSON(nodeData);
-        }
-        graph.addNode(node);
-      });
-    }
+    data.nodes.forEach(nodeData => {
+      const NodeClass = (registry && typeof registry.get === 'function')
+        ? (registry.get(nodeData.category) || Node)
+        : Node;
+      const node = (typeof NodeClass.fromJSON === 'function') 
+        ? NodeClass.fromJSON(nodeData)
+        : new Node(nodeData);
+      graph.addNode(node);
+    });
 
-    if (Array.isArray(data.connections)) {
+    if (data.connections) {
       data.connections.forEach(connData => {
         graph.connect(connData);
       });

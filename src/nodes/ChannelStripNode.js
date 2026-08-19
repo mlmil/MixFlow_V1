@@ -40,27 +40,31 @@ export class ChannelStripNode extends Node {
         id: `strip_usb_in_l_${this.id}`,
         name: `USB Return ${channelIndex} [L]`,
         direction: 'input',
-        type: 'usb'
+        type: 'usb',
+        color: 'var(--color-playback)'
       }));
       this.addPort(new Port({
         id: `strip_usb_in_r_${this.id}`,
         name: `USB Return ${channelIndex+1} [R]`,
         direction: 'input',
-        type: 'usb'
+        type: 'usb',
+        color: 'var(--color-playback)'
       }));
     } else {
       this.title = `Strip ${channelIndex}: ${this.getProperty('name')}`;
       this.addPort(new Port({
         id: `strip_analog_in_${this.id}`,
-        name: 'Analog In',
+        name: `Analog In (XLR ${channelIndex})`,
         direction: 'input',
-        type: 'audio'
+        type: 'audio',
+        color: 'var(--color-vocal)'
       }));
       this.addPort(new Port({
         id: `strip_usb_in_l_${this.id}`,
         name: `USB Return ${channelIndex}`,
         direction: 'input',
-        type: 'usb'
+        type: 'usb',
+        color: 'var(--color-playback)'
       }));
     }
 
