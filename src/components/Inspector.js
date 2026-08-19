@@ -61,6 +61,67 @@ export class Inspector {
   close() {
     this.isOpen = false;
     this.panel.classList.remove('open');
+    if (this.meterAnimFrame) cancelAnimationFrame(this.meterAnimFrame);
+  }
+
+  startMeterLoop() {
+    if (this.meterAnimFrame) cancelAnimationFrame(this.meterAnimFrame);
+
+    const updateMeter = () => {
+      if (!this.toneGen || !this.toneGen.isPlaying) {
+        this.resetMeterUI();
+        return;
+      }
+
+      const meterData = this.toneGen.getMeterLevel();
+      const readout = this.inspectorContent?.querySelector('.meter-db-readout');
+      if (readout) {
+        readout.textContent = `${meterData.peakDb > -60 ? meterData.peakDb.toFixed(1) : '-inf'} dBFS`;
+      }
+
+      const leds = this.inspectorContent?.querySelectorAll('.vu-led');
+      if (leds && leds.length > 0) {
+        const colors = [
+          '#00e676', '#00e676', '#00e676', '#00e676', '#00e676', '#00e676',
+          '#ffd600', '#ffd600',
+          '#ff3d00', '#ff1744'
+        ];
+        const dimColors = [
+          '#13331c', '#13331c', '#13331c', '#13331c', '#13331c', '#13331c',
+          '#332c13', '#332c13',
+          '#331813', '#331313'
+        ];
+
+        leds.forEach((led, i) => {
+          const isActive = i < meterData.activeLeds;
+          led.style.background = isActive ? colors[i] : dimColors[i];
+          led.style.boxShadow = isActive ? `0 0 6px ${colors[i]}` : 'none';
+        });
+      }
+
+      this.meterAnimFrame = requestAnimationFrame(updateMeter);
+    };
+
+    this.meterAnimFrame = requestAnimationFrame(updateMeter);
+  }
+
+  resetMeterUI() {
+    if (this.meterAnimFrame) cancelAnimationFrame(this.meterAnimFrame);
+    const readout = this.inspectorContent?.querySelector('.meter-db-readout');
+    if (readout) readout.textContent = 'INACTIVE';
+
+    const leds = this.inspectorContent?.querySelectorAll('.vu-led');
+    if (leds) {
+      const dimColors = [
+        '#13331c', '#13331c', '#13331c', '#13331c', '#13331c', '#13331c',
+        '#332c13', '#332c13',
+        '#331813', '#331313'
+      ];
+      leds.forEach((led, i) => {
+        led.style.background = dimColors[i];
+        led.style.boxShadow = 'none';
+      });
+    }
   }
 
   select(nodeId) {
@@ -116,21 +177,50 @@ export class Inspector {
         </div>
       </div>
 
-      <!-- Tone Generator Preview Box -->
+      <!-- Tone Generator & Live Signal Level Meter Box -->
       <div class="tone-gen-box" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; display: flex; flex-direction: column; gap: 8px;">
         <div style="display: flex; align-items: center; justify-content: space-between;">
-          <span style="font-size: 11px; font-weight: 600; color: var(--color-keys);">🔊 Test Tone / Preview</span>
+          <span style="font-size: 11px; font-weight: 600; color: var(--color-keys);">🔊 Test Tone / Signal Injector</span>
           <button class="btn-tone-toggle tool-btn" style="font-size: 10px; padding: 3px 8px;">
             ${this.toneGen.isPlaying ? '⏹️ Stop Tone' : '▶️ Inject Tone'}
           </button>
         </div>
+        
         <div style="display: flex; gap: 6px; align-items: center; font-size: 10px;">
-          <select class="tone-type-select node-select" style="width: 80px; padding: 2px;">
+          <select class="tone-type-select node-select" style="width: 100px; padding: 2px;">
             <option value="sine" ${this.toneGen.type === 'sine' ? 'selected' : ''}>1kHz Sine</option>
             <option value="pink" ${this.toneGen.type === 'pink' ? 'selected' : ''}>Pink Noise</option>
             <option value="white" ${this.toneGen.type === 'white' ? 'selected' : ''}>White Noise</option>
           </select>
-          <span style="font-family: var(--font-mono); color: var(--text-muted);">${this.toneGen.levelDb} dBFS</span>
+          <span style="font-family: var(--font-mono); color: var(--text-muted);">${this.toneGen.levelDb} dBFS Calibration</span>
+        </div>
+
+        <!-- Real-Time Hardware LED VU Level Meter -->
+        <div class="vu-meter-container" style="display: flex; flex-direction: column; gap: 4px; background: rgba(0, 0, 0, 0.4); border-radius: 4px; padding: 6px 8px; border: 1px solid var(--border-subtle); margin-top: 2px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9px; font-family: var(--font-mono); color: var(--text-muted);">
+            <span>LIVE SIGNAL LEVEL</span>
+            <span class="meter-db-readout" style="color: var(--color-keys); font-weight: 700;">${this.toneGen.isPlaying ? `${this.toneGen.levelDb} dBFS` : 'INACTIVE'}</span>
+          </div>
+          <div class="vu-led-ladder" style="display: flex; gap: 3px; height: 10px; align-items: center;">
+            <div class="vu-led" data-idx="0" style="flex:1; height:100%; border-radius:2px; background: #13331c;"></div>
+            <div class="vu-led" data-idx="1" style="flex:1; height:100%; border-radius:2px; background: #13331c;"></div>
+            <div class="vu-led" data-idx="2" style="flex:1; height:100%; border-radius:2px; background: #13331c;"></div>
+            <div class="vu-led" data-idx="3" style="flex:1; height:100%; border-radius:2px; background: #13331c;"></div>
+            <div class="vu-led" data-idx="4" style="flex:1; height:100%; border-radius:2px; background: #13331c;"></div>
+            <div class="vu-led" data-idx="5" style="flex:1; height:100%; border-radius:2px; background: #13331c;"></div>
+            <div class="vu-led" data-idx="6" style="flex:1; height:100%; border-radius:2px; background: #332c13;"></div>
+            <div class="vu-led" data-idx="7" style="flex:1; height:100%; border-radius:2px; background: #332c13;"></div>
+            <div class="vu-led" data-idx="8" style="flex:1; height:100%; border-radius:2px; background: #331813;"></div>
+            <div class="vu-led" data-idx="9" style="flex:1; height:100%; border-radius:2px; background: #331313;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 8px; font-family: var(--font-mono); color: var(--text-muted); padding: 0 1px;">
+            <span>-48</span>
+            <span>-24</span>
+            <span>-18</span>
+            <span>-6</span>
+            <span>0</span>
+            <span style="color:var(--status-error);">CLIP</span>
+          </div>
         </div>
       </div>
 
@@ -163,20 +253,23 @@ export class Inspector {
       });
     }
 
-    // Bind Tone Generator Button
+    // Bind Tone Generator Button & Live Meter Loop
     const toneBtn = this.inspectorContent.querySelector('.btn-tone-toggle');
     const toneSelect = this.inspectorContent.querySelector('.tone-type-select');
+    
     toneBtn.addEventListener('click', () => {
       if (this.toneGen.isPlaying) {
         this.toneGen.stop();
         toneBtn.textContent = '▶️ Inject Tone';
         toneBtn.classList.remove('primary');
+        this.resetMeterUI();
       } else {
         const type = toneSelect.value;
         const freq = type === 'sine' ? 1000 : 440;
         this.toneGen.start(type, freq, -18);
         toneBtn.textContent = '⏹️ Stop Tone';
         toneBtn.classList.add('primary');
+        this.startMeterLoop();
       }
     });
 
@@ -187,6 +280,10 @@ export class Inspector {
         this.toneGen.start(type, freq, -18);
       }
     });
+
+    if (this.toneGen.isPlaying) {
+      this.startMeterLoop();
+    }
 
     // Bind 1-Click Auto-Fix Buttons
     this.inspectorContent.querySelectorAll('.btn-apply-fix').forEach(btn => {

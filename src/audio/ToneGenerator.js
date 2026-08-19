@@ -1,5 +1,5 @@
 /**
- * Web Audio API Signal & Tone Generator
+ * Web Audio API Signal & Tone Generator with Real-time Analyser & Metering
  * Generates calibrated Sine waves (100Hz, 440Hz, 1kHz, 10kHz), Pink Noise, and White Noise
  * for testing XR18 signal paths, gain staging, and IEM monitor levels.
  */
@@ -9,10 +9,12 @@ export class ToneGenerator {
     this.oscNode = null;
     this.gainNode = null;
     this.noiseNode = null;
+    this.analyserNode = null;
     this.isPlaying = false;
     this.type = 'sine'; // 'sine' | 'pink' | 'white'
     this.frequency = 1000; // 1kHz test tone
     this.levelDb = -18; // -18 dBFS nominal broadcast/digital mixer calibration
+    this.timeDomainData = new Uint8Array(128);
   }
 
   ensureContext() {
@@ -40,7 +42,14 @@ export class ToneGenerator {
 
     this.gainNode = this.audioCtx.createGain();
     this.gainNode.gain.setValueAtTime(this.dbToGain(db), this.audioCtx.currentTime);
-    this.gainNode.connect(this.audioCtx.destination);
+
+    this.analyserNode = this.audioCtx.createAnalyser();
+    this.analyserNode.fftSize = 256;
+    this.analyserNode.smoothingTimeConstant = 0.6;
+    this.timeDomainData = new Uint8Array(this.analyserNode.frequencyBinCount);
+
+    this.gainNode.connect(this.analyserNode);
+    this.analyserNode.connect(this.audioCtx.destination);
 
     if (type === 'sine') {
       this.oscNode = this.audioCtx.createOscillator();
@@ -83,6 +92,39 @@ export class ToneGenerator {
     this.isPlaying = true;
   }
 
+  getMeterLevel() {
+    if (!this.isPlaying || !this.analyserNode) {
+      return { peakDb: -60, rms: 0, percent: 0, activeLeds: 0 };
+    }
+
+    this.analyserNode.getByteTimeDomainData(this.timeDomainData);
+    let sum = 0;
+    let peak = 0;
+
+    for (let i = 0; i < this.timeDomainData.length; i++) {
+      const sample = (this.timeDomainData[i] - 128) / 128;
+      const abs = Math.abs(sample);
+      if (abs > peak) peak = abs;
+      sum += sample * sample;
+    }
+
+    const rms = Math.sqrt(sum / this.timeDomainData.length);
+    let peakDb = peak > 0 ? 20 * Math.log10(peak) : -60;
+    if (peakDb < -60) peakDb = -60;
+
+    // 0 to 100 percentage scaled logarithmically
+    const percent = Math.min(100, Math.max(0, ((peakDb + 60) / 60) * 100));
+    // Number of active LEDs out of 10
+    const activeLeds = Math.round((percent / 100) * 10);
+
+    return {
+      peakDb: Math.round(peakDb * 10) / 10,
+      rms: Math.round(rms * 100) / 100,
+      percent,
+      activeLeds
+    };
+  }
+
   setFrequency(freq) {
     this.frequency = freq;
     if (this.oscNode && this.isPlaying) {
@@ -107,6 +149,10 @@ export class ToneGenerator {
       try { this.noiseNode.stop(); } catch (e) {}
       this.noiseNode.disconnect();
       this.noiseNode = null;
+    }
+    if (this.analyserNode) {
+      this.analyserNode.disconnect();
+      this.analyserNode = null;
     }
     if (this.gainNode) {
       this.gainNode.disconnect();
