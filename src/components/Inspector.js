@@ -1,72 +1,72 @@
 import { ToneGenerator } from '../audio/ToneGenerator.js';
 
 export class Inspector {
-  constructor({ container, graph, toneGen }) {
-    this.container = container;
+  constructor({ containerId, graph }) {
+    this.container = document.getElementById(containerId);
     this.graph = graph;
-    this.toneGen = toneGen || new ToneGenerator();
     this.selectedNodeId = null;
     this.isOpen = false;
+    this.toneGen = new ToneGenerator();
 
     this.initDOM();
-    this.bindEvents();
   }
 
   initDOM() {
-    this.el = document.createElement('aside');
-    this.el.classList.add('inspector-panel');
-
-    this.el.innerHTML = `
+    this.panel = document.createElement('div');
+    this.panel.classList.add('inspector-drawer');
+    this.panel.innerHTML = `
       <div class="inspector-header">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 11px; font-weight: 700; color: var(--color-vocal); letter-spacing: 0.5px;">INSPECTOR</span>
-          <span class="inspector-id mono" style="font-size: 10px; color: var(--text-muted);">No Selection</span>
+          <span class="inspector-badge">INSPECTOR</span>
+          <span id="inspector-node-id" class="inspector-node-id">No Selection</span>
         </div>
-        <button class="inspector-close-btn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px;">✕</button>
+        <button id="btn-inspector-close" class="inspector-close-btn" title="Close Drawer">&times;</button>
       </div>
 
-      <div class="inspector-body">
-        <div class="inspector-empty" style="padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 12px;">
-          <div style="font-size: 24px; margin-bottom: 8px;">🎛️</div>
-          <strong>Select a Channel or Node</strong>
-          <p style="margin-top: 4px; font-size: 11px;">Inspect gain staging, return switches, bus sends, tone generator preview, and linter auto-fixes here.</p>
+      <div id="inspector-body" class="inspector-body">
+        <div id="inspector-empty" class="inspector-empty-state">
+          <p>Select any node on the canvas to inspect real-time channel parameters, step-by-step Mixing Station guide, signal path story, and tone generator.</p>
         </div>
-        <div class="inspector-content" style="display: none; padding: 14px; flex-direction: column; gap: 12px;"></div>
+
+        <div id="inspector-content" class="inspector-content" style="display: none;">
+          <!-- Dynamically populated -->
+        </div>
       </div>
     `;
 
-    this.inspectorContent = this.el.querySelector('.inspector-content');
-    this.inspectorEmpty = this.el.querySelector('.inspector-empty');
-    this.inspectorId = this.el.querySelector('.inspector-id');
+    document.body.appendChild(this.panel);
 
-    this.el.querySelector('.inspector-close-btn').addEventListener('click', () => this.close());
-    this.container.appendChild(this.el);
-  }
+    this.inspectorEmpty = this.panel.querySelector('#inspector-empty');
+    this.inspectorContent = this.panel.querySelector('#inspector-content');
+    this.inspectorId = this.panel.querySelector('#inspector-node-id');
 
-  bindEvents() {
-    this.graph.on('nodeChange', () => {
-      if (this.selectedNodeId) this.renderSelection(this.selectedNodeId);
+    // Close button
+    this.panel.querySelector('#btn-inspector-close').addEventListener('click', () => {
+      this.close();
     });
-    this.graph.on('diagnosticsUpdated', () => {
-      if (this.selectedNodeId) this.renderSelection(this.selectedNodeId);
-    });
-  }
 
-  select(nodeId) {
-    this.selectedNodeId = nodeId;
-    this.open();
-    this.renderSelection(nodeId);
+    // Re-render when graph changes
+    this.graph.on('change', () => {
+      if (this.selectedNodeId) {
+        this.renderSelection(this.selectedNodeId);
+      }
+    });
   }
 
   open() {
     this.isOpen = true;
-    this.el.classList.add('open');
+    this.panel.classList.add('open');
   }
 
   close() {
     this.isOpen = false;
-    this.el.classList.remove('open');
-    this.selectedNodeId = null;
+    this.panel.classList.remove('open');
+  }
+
+  select(nodeId) {
+    this.selectedNodeId = nodeId;
+    this.renderSelection(nodeId);
+    this.open();
   }
 
   renderSelection(nodeId) {
@@ -91,8 +91,25 @@ export class Inspector {
         <span style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase;">CATEGORY: ${node.category}</span>
       </div>
 
+      <!-- Signal Path Summary (Natural Language) -->
+      <div class="signal-path-box" style="background: rgba(0, 229, 255, 0.06); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-size: 11px; font-weight: 700; color: var(--color-vocal); text-transform: uppercase; letter-spacing: 0.5px;">🛣️ Signal Path Story</span>
+        <div style="font-size: 11px; line-height: 1.5; color: var(--text-secondary);">
+          ${this.generateSignalPathStory(node)}
+        </div>
+      </div>
+
+      <!-- Mixing Station & Ableton Step-by-Step Setup Guide -->
+      <div class="ms-guide-box" style="background: rgba(255, 170, 0, 0.06); border: 1px solid rgba(255, 170, 0, 0.25); border-radius: var(--radius-sm); padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-size: 11px; font-weight: 700; color: var(--color-guitar); text-transform: uppercase; letter-spacing: 0.5px;">🎛️ Mixing Station & XR18 Setup Instructions</span>
+        <div style="font-size: 11px; line-height: 1.5; color: var(--text-primary);">
+          ${this.generateMixingStationInstructions(node)}
+        </div>
+      </div>
+
       <!-- Live Controls Box -->
       <div class="inspector-controls-box" style="background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 11px; font-weight: 700; color: var(--text-primary); text-transform: uppercase;">Node Parameters</span>
         ${this.renderNodeSpecificInspectorControls(node)}
         <div style="display:flex; justify-content:flex-end; margin-top:4px;">
           <button class="tool-btn btn-clear-node-wires" style="font-size:10px; padding:3px 8px; color:var(--status-error);" title="Disconnect all cables attached to this node">✂️ Clear Node Wires</button>
@@ -188,6 +205,153 @@ export class Inspector {
     });
   }
 
+  generateSignalPathStory(node) {
+    if (node.category === 'input') {
+      const ch = node.getProperty('channelIndex', 1);
+      const name = node.getProperty('name', 'Performer');
+      const directIEMConn = this.graph.connections.find(c => c.fromNodeId === node.id && c.fromPortId.includes('direct_iem'));
+      const usbConn = this.graph.connections.find(c => c.fromNodeId === node.id && c.fromPortId.includes('preamp_out'));
+      
+      let story = `<p><strong>Source:</strong> Physical microphone/instrument plugged into XLR Jack <strong>#${ch}</strong> on the XR18 stage box.</p>`;
+      if (directIEMConn) {
+        const targetNode = this.graph.getNode(directIEMConn.toNodeId);
+        story += `<p><strong>In-Ear Monitors:</strong> Splits directly at the preamp with <strong>0ms latency</strong> into <em>${targetNode ? targetNode.title : 'IEM Bus'}</em> (pre-DAW, rock-solid volume).</p>`;
+      }
+      if (usbConn) {
+        story += `<p><strong>To Computer:</strong> Streams clean raw audio over USB into Ableton Live for real-time plugin processing.</p>`;
+      }
+      return story;
+    }
+
+    if (node.category === 'usb_send') {
+      const ch = node.getProperty('channelIndex', 1);
+      const tap = node.getProperty('tapPoint', 'Analog In');
+      return `
+        <p><strong>Tap Point:</strong> Taps Input #${ch} at <strong>${tap}</strong>.</p>
+        <p><strong>To DAW:</strong> Sends an uncolored, pure analog preamp signal over USB Send #${ch} into Ableton Live.</p>
+      `;
+    }
+
+    if (node.category === 'daw') {
+      const isStereo = node.getProperty('isStereoOut', false);
+      const outCh = node.getProperty('outputChannel', 1);
+      const plugins = node.getProperty('plugins', []);
+      const pluginList = plugins.length > 0 ? plugins.join(' ➔ ') : 'Live Processing';
+
+      return `
+        <p><strong>In Ableton:</strong> Receives raw vocal/instrument on <em>Ext. In</em>.</p>
+        <p><strong>FX Chain:</strong> Runs <strong>${pluginList}</strong>.</p>
+        <p><strong>Return to Mixer:</strong> Outputs ${isStereo ? `stereo pair <strong>Ext. Out ${outCh}/${outCh+1}</strong>` : `mono <strong>Ext. Out ${outCh}</strong>`} directly into XR18 mixer strip.</p>
+        <p><strong>Live Control:</strong> Controlled wirelessly out front by your physical M-Vave MIDI faders.</p>
+      `;
+    }
+
+    if (node.category === 'strip') {
+      const isStereo = node.getProperty('isStereoPair', false);
+      const isUSB = node.getProperty('rtnsw', false);
+      const ch = node.getProperty('channelIndex', 1);
+
+      return `
+        <p><strong>On Mixer:</strong> Channel Strip <strong>${isStereo ? `#${ch}/${ch+1} [Stereo]` : `#${ch}`}</strong>.</p>
+        <p><strong>Input Source:</strong> Set to <strong>${isUSB ? 'USB Return (Ableton DAW FX)' : 'Analog XLR (Raw Mic)'}</strong>.</p>
+        <p><strong>Fader Position:</strong> Parked at <strong>0 dB (Unity)</strong> so your Ableton MIDI controller has full live volume command.</p>
+        <p><strong>Destination:</strong> Feeds processed sound out to <strong>Main FOH PA</strong> for the audience.</p>
+      `;
+    }
+
+    if (node.category === 'main' || node.category === 'bus') {
+      const isMain = node.getProperty('busType') === 'main_lr';
+      if (isMain) {
+        return `
+          <p><strong>Front of House Master:</strong> Master Stereo Bus for the venue PA.</p>
+          <p><strong>Outputs:</strong> Feeds physical XLR Main Out L & Main Out R jacks directly to the audience sound system.</p>
+        `;
+      } else {
+        const aux = node.getProperty('auxIndex', 1);
+        return `
+          <p><strong>In-Ear Monitor Bus:</strong> Dedicated monitor feed for <strong>Aux ${aux}</strong>.</p>
+          <p><strong>Outputs:</strong> Feeds physical XLR Aux Out ${aux} directly to the performer's wireless IEM transmitter.</p>
+        `;
+      }
+    }
+
+    return `<p>Signal flows through this node across connected sockets.</p>`;
+  }
+
+  generateMixingStationInstructions(node) {
+    if (node.category === 'input') {
+      const ch = node.getProperty('channelIndex', 1);
+      const phantom = node.getProperty('phantom', false);
+      return `
+        <ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+          <li><strong>Physical Jack:</strong> Plug into physical <strong>XLR Input #${ch}</strong> on the XR18 chassis.</li>
+          <li><strong>Preamp Gain:</strong> Set gain between <strong>+24 dB and +36 dB</strong> until green signal LED lights steadily.</li>
+          <li><strong>+48V Phantom:</strong> ${phantom ? 'Turn <strong>ON</strong> (required for condenser mics/active DIs).' : 'Leave <strong>OFF</strong> for standard dynamic mics (SM58, etc.).'}</li>
+          <li><strong>Low-Cut HPF:</strong> Set to <strong>80 Hz - 100 Hz</strong> to eliminate stage foot-thumps and rumble.</li>
+        </ul>
+      `;
+    }
+
+    if (node.category === 'usb_send') {
+      const ch = node.getProperty('channelIndex', 1);
+      return `
+        <ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+          <li>In Mixing Station ➔ <strong>Routing ➔ USB Sends</strong>:</li>
+          <li>Set <strong>USB Send ${ch}</strong> tap point to <strong>Analog In</strong>.</li>
+          <li><em>Why? This ensures Ableton gets a pristine, clean raw feed before any mixer EQ or gate.</em></li>
+        </ul>
+      `;
+    }
+
+    if (node.category === 'daw') {
+      const isStereo = node.getProperty('isStereoOut', false);
+      const outCh = node.getProperty('outputChannel', 1);
+      return `
+        <ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+          <li>In <strong>Ableton Live</strong>:</li>
+          <li><strong>Audio From:</strong> Set to <code>Ext. In ${outCh}</code> (Monitor = <code>In</code>).</li>
+          <li><strong>Audio To:</strong> Set directly to <code>Ext. Out ${isStereo ? `${outCh}/${outCh+1}` : `${outCh}`}</code> (<strong>NOT Master!</strong>).</li>
+          <li><strong>Buffer Size:</strong> Set to <strong>64 samples @ 48 kHz</strong> in Audio Preferences for ultra-low ~2.8ms latency.</li>
+        </ul>
+      `;
+    }
+
+    if (node.category === 'strip') {
+      const isStereo = node.getProperty('isStereoPair', false);
+      const ch = node.getProperty('channelIndex', 1);
+      return `
+        <ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+          <li><strong>CRITICAL:</strong> In Mixing Station ➔ <strong>Channel ${ch} ➔ Config / Input Source</strong>:</li>
+          <li>Switch Input Source to <strong>USB Return ${ch}</strong> (<code>rtnsw = 1</code>).</li>
+          ${isStereo ? `<li><strong>Stereo Link:</strong> In Mixing Station, turn on <strong>Stereo Link (${ch}-${ch+1})</strong>.</li>` : ''}
+          <li><strong>Fader:</strong> Park fader at <strong>0 dB (Unity)</strong> so your wireless MIDI controller in Ableton controls live volume out front.</li>
+        </ul>
+      `;
+    }
+
+    if (node.category === 'main' || node.category === 'bus') {
+      const isMain = node.getProperty('busType') === 'main_lr';
+      if (isMain) {
+        return `
+          <ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+            <li>On XR18 rear chassis: Connect <strong>Main Out L & R XLR</strong> to venue PA / amplifiers.</li>
+            <li>Master Fader in Mixing Station controls final room ceiling volume.</li>
+          </ul>
+        `;
+      } else {
+        const aux = node.getProperty('auxIndex', 1);
+        return `
+          <ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+            <li>On XR18 chassis: Connect <strong>Aux Out ${aux} XLR</strong> to performer's IEM transmitter.</li>
+            <li>In Mixing Station: Adjust performer's mix under <strong>Aux ${aux} / Sends on Faders</strong>.</li>
+          </ul>
+        `;
+      }
+    }
+
+    return `<p>Configure this node according to your show requirements.</p>`;
+  }
+
   renderNodeSpecificInspectorControls(node) {
     if (node.category === 'input') {
       return `
@@ -233,18 +397,32 @@ export class Inspector {
     }
 
     if (node.category === 'daw') {
+      const plugins = node.getProperty('plugins', []);
       return `
         <div style="display: flex; justify-content: space-between; font-size: 11px;">
-          <span>Track Type:</span>
-          <span style="font-family: var(--font-mono); color: var(--color-playback);">${node.getProperty('trackType')}</span>
+          <span>Output Mode:</span>
+          <span style="font-family: var(--font-mono); color: var(--color-playback); font-weight:700;">${node.getProperty('isStereoOut') ? 'Stereo (Dual L/R)' : 'Mono (1-Ch)'}</span>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 11px;">
-          <span>Output Routing:</span>
-          <span style="font-family: var(--font-mono); font-weight:700; color: var(--status-warning);">${node.getProperty('isStereoOut') ? `Ext. Out ${node.getProperty('outputChannel')}/${node.getProperty('outputChannel')+1}` : `Ext. Out ${node.getProperty('outputChannel')}`}</span>
+          <span>Est. Latency:</span>
+          <span style="font-family: var(--font-mono); color: var(--status-success);">2.8 ms (64 smp @ 48k)</span>
+        </div>
+        <div style="font-size: 11px; margin-top: 4px;">
+          <span style="color: var(--text-muted);">Active Plugins:</span>
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--color-vocal); margin-top: 2px;">${plugins.length > 0 ? plugins.join(' ➔ ') : 'None'}</div>
         </div>
       `;
     }
 
-    return `<span style="font-size: 11px; color: var(--text-muted);">${node.title} · ${node.category}</span>`;
+    if (node.category === 'main' || node.category === 'bus') {
+      return `
+        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+          <span>Master Fader:</span>
+          <span style="font-family: var(--font-mono); color: var(--color-main); font-weight:700;">${node.getProperty('masterFader')} dB</span>
+        </div>
+      `;
+    }
+
+    return '';
   }
 }
