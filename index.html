@@ -4,10 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MixFlow | XR18 Visual Node Router & Linter</title>
-  <link rel="stylesheet" href="./src/styles/theme.css">
-  <link rel="stylesheet" href="./src/styles/canvas.css">
-  <link rel="stylesheet" href="./src/styles/copilot.css">
-  <link rel="stylesheet" href="./src/styles/main.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,7 +19,8 @@
     <div class="toolbar-group">
       <div style="display: flex; align-items: center; gap: 4px;">
         <select id="template-select" class="tool-btn" style="max-width: 260px;"></select>
-        <button id="btn-manage-templates" class="tool-btn" title="Edit, Rename, Clone, and Overwrite Templates">✏️ Edit Templates</button>
+        <button id="btn-quick-save" class="tool-btn" title="1-Click Save / Overwrite Current Rig">💾 Save</button>
+        <button id="btn-manage-templates" class="tool-btn" title="Manage, Rename, Clone, and Export Templates">✏️ Templates</button>
       </div>
 
       <button id="btn-inspector-toggle" class="tool-btn" title="Toggle Channel Inspector">🔍 Inspector</button>

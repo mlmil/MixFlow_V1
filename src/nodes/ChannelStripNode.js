@@ -37,8 +37,14 @@ export class ChannelStripNode extends Node {
     if (isStereoPair) {
       this.title = `Strip ${channelIndex}/${channelIndex+1} [Stereo]: ${this.getProperty('name')}`;
       this.addPort(new Port({
-        id: `strip_usb_in_stereo_${this.id}`,
-        name: `USB Return ${channelIndex}/${channelIndex+1}`,
+        id: `strip_usb_in_l_${this.id}`,
+        name: `USB Return ${channelIndex} [L]`,
+        direction: 'input',
+        type: 'usb'
+      }));
+      this.addPort(new Port({
+        id: `strip_usb_in_r_${this.id}`,
+        name: `USB Return ${channelIndex+1} [R]`,
         direction: 'input',
         type: 'usb'
       }));
@@ -51,7 +57,7 @@ export class ChannelStripNode extends Node {
         type: 'audio'
       }));
       this.addPort(new Port({
-        id: `strip_usb_in_${this.id}`,
+        id: `strip_usb_in_l_${this.id}`,
         name: `USB Return ${channelIndex}`,
         direction: 'input',
         type: 'usb'
@@ -104,6 +110,7 @@ export class ChannelStripNode extends Node {
 
     const isUSB = this.getProperty('rtnsw');
     const isStereo = this.getProperty('isStereoPair');
+    const chIndex = this.getProperty('channelIndex', 1);
 
     // rtnsw switch row
     const switchRow = document.createElement('div');
@@ -132,9 +139,9 @@ export class ChannelStripNode extends Node {
     const linkRow = document.createElement('div');
     linkRow.classList.add('node-control-row');
     linkRow.innerHTML = `
-      <label style="font-size: 10px;">Channel Link:</label>
+      <label style="font-size: 10px;">Mixer Strip #${chIndex}:</label>
       <button class="node-btn btn-link-toggle" style="font-size: 10px; padding: 2px 8px; border-radius: 4px; background: ${isStereo ? 'rgba(0, 229, 255, 0.2)' : 'var(--bg-input)'}; border: 1px solid ${isStereo ? 'var(--color-vocal)' : 'var(--border-subtle)'}; color: ${isStereo ? 'var(--color-vocal)' : 'var(--text-secondary)'}; cursor: pointer;">
-        ${isStereo ? '🔗 Stereo Linked' : '🔓 Mono Channel'}
+        ${isStereo ? `🔗 Stereo (${chIndex}/${chIndex+1})` : `🔓 Mono (${chIndex})`}
       </button>
     `;
 

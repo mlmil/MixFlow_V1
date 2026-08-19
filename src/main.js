@@ -147,6 +147,33 @@ function initApp() {
     });
   }
 
+  // Quick Save Button (1-Click Instant Save)
+  const btnQuickSave = document.getElementById('btn-quick-save');
+  if (btnQuickSave) {
+    btnQuickSave.addEventListener('click', () => {
+      const customTemplates = TemplateManager.getCustomTemplates();
+      if (customTemplates[activeTemplateId]) {
+        TemplateManager.overwriteTemplate(activeTemplateId, graph);
+        const originalText = btnQuickSave.textContent;
+        btnQuickSave.textContent = '✓ Saved!';
+        btnQuickSave.style.background = 'var(--status-success)';
+        btnQuickSave.style.color = '#000';
+        setTimeout(() => {
+          btnQuickSave.textContent = originalText;
+          btnQuickSave.style.background = '';
+          btnQuickSave.style.color = '';
+        }, 1500);
+      } else {
+        const name = prompt('Enter a name for this custom template:', 'My Live Rig');
+        if (!name) return;
+        const newId = TemplateManager.saveCustomTemplate(name, 'Custom band setup', graph);
+        refreshTemplateOptions(newId);
+        activeTemplateId = newId;
+        alert(`Rig saved as "${name}"!`);
+      }
+    });
+  }
+
   // Open Template Editor & Manager Modal
   const btnManageTemplates = document.getElementById('btn-manage-templates');
   if (btnManageTemplates) {

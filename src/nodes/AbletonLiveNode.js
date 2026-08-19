@@ -42,18 +42,25 @@ export class AbletonLiveNode extends Node {
       type: 'usb'
     }));
 
-    // Ableton standard routing label: "Ext. Out [channel]" or grouped stereo "Ext. Out [ch/ch+1]"
+    // Ableton Dual Stereo Output Ports: Left and Right
     if (isStereoOut) {
       this.addPort(new Port({
-        id: `daw_out_stereo_${this.id}`,
-        name: `Ext. Out ${outputChannel}/${outputChannel + 1}`,
+        id: `daw_out_l_${this.id}`,
+        name: `Ext. Out ${outputChannel} [L]`,
+        direction: 'output',
+        type: 'usb',
+        color: 'var(--color-playback)'
+      }));
+      this.addPort(new Port({
+        id: `daw_out_r_${this.id}`,
+        name: `Ext. Out ${outputChannel + 1} [R]`,
         direction: 'output',
         type: 'usb',
         color: 'var(--color-playback)'
       }));
     } else {
       this.addPort(new Port({
-        id: `daw_out_${this.id}`,
+        id: `daw_out_l_${this.id}`,
         name: `Ext. Out ${outputChannel}`,
         direction: 'output',
         type: 'usb',
@@ -99,16 +106,16 @@ export class AbletonLiveNode extends Node {
     const plugins = this.getProperty('plugins', []);
     const outCh = this.getProperty('outputChannel', 1);
     const isStereo = this.getProperty('isStereoOut');
-    const stereoTag = isStereo ? ` <span style="color:var(--status-warning); font-weight:700;">[Ext. Out ${outCh}/${outCh+1} Stereo]</span>` : ` <span style="color:var(--text-muted);">[Ext. Out ${outCh} Mono]</span>`;
+    const stereoTag = isStereo ? ` <span style="color:var(--status-warning); font-weight:700;">[Ext. Out ${outCh}/${outCh+1} Dual L/R]</span>` : ` <span style="color:var(--text-muted);">[Ext. Out ${outCh} Mono]</span>`;
     pluginList.innerHTML = `<strong>Audio To: Ext. Out</strong>${stereoTag}<br>${plugins.join(' ➔ ')}`;
 
-    // Mode Toggle Bar (Mono vs Stereo Pair)
+    // Mode Toggle Bar (Mono vs Stereo Dual Output)
     const modeRow = document.createElement('div');
     modeRow.classList.add('node-control-row');
     modeRow.innerHTML = `
       <label style="font-size: 10px;">Output Mode:</label>
       <button class="node-btn btn-stereo-toggle" style="font-size: 10px; padding: 2px 8px; border-radius: 4px; background: ${isStereo ? 'rgba(213, 0, 249, 0.2)' : 'var(--bg-input)'}; border: 1px solid ${isStereo ? 'var(--color-playback)' : 'var(--border-subtle)'}; color: ${isStereo ? 'var(--color-playback)' : 'var(--text-secondary)'}; cursor: pointer;">
-        ${isStereo ? '✨ Stereo (2-Ch)' : '🔘 Mono (1-Ch)'}
+        ${isStereo ? '✨ Stereo (Dual L/R)' : '🔘 Mono (1-Ch)'}
       </button>
     `;
 

@@ -25,7 +25,7 @@ export function buildZeroLatencyIEM() {
   graph.addNode(iem1);
   graph.addNode(iem2);
 
-  // 1. LEAD VOCAL WITH STEREO EFFECTS (Row 0: Ch 1 in -> Ableton Ext. Out 1/2 -> XR18 Strip 1/2)
+  // 1. LEAD VOCAL WITH STEREO EFFECTS (Row 0: Ch 1 in -> Ableton Ext. Out 1/2 Dual L/R -> XR18 Strip 1/2)
   const leadVoxIn = new StageInputNode({
     id: 'in_lead_vox',
     channelIndex: 1,
@@ -97,12 +97,20 @@ export function buildZeroLatencyIEM() {
     color: 'var(--color-keys)'
   });
 
-  // Lead: Ableton Ext. Out 1/2 -> XR18 USB Return 1/2
+  // Lead: Dual Stereo Cables from Ableton into XR18 Strip 1/2 (Left and Right)
   graph.connect({
     fromNodeId: leadAbleton.id,
-    fromPortId: leadAbleton.outputs[0].id,
+    fromPortId: leadAbleton.outputs[0].id, // Ext. Out 1 [L]
     toNodeId: leadStereoStrip.id,
-    toPortId: leadStereoStrip.inputs[0].id,
+    toPortId: leadStereoStrip.inputs[0].id, // USB Return 1 [L]
+    color: 'var(--color-playback)'
+  });
+
+  graph.connect({
+    fromNodeId: leadAbleton.id,
+    fromPortId: leadAbleton.outputs[1].id, // Ext. Out 2 [R]
+    toNodeId: leadStereoStrip.id,
+    toPortId: leadStereoStrip.inputs[1].id, // USB Return 2 [R]
     color: 'var(--color-playback)'
   });
 
@@ -214,7 +222,7 @@ export function buildZeroLatencyIEM() {
     });
   });
 
-  // Playback / Backing Tracks (Row 7: USB 17/18)
+  // Playback / Backing Tracks (Row 7: USB 17/18 Dual Stereo)
   const backingY = 80 + (bandChannels.length + 1) * ROW_HEIGHT;
 
   const backingDaw = new AbletonLiveNode({
@@ -241,11 +249,20 @@ export function buildZeroLatencyIEM() {
   graph.addNode(backingDaw);
   graph.addNode(auxStrip);
 
+  // Dual Cables for Backing Tracks (L and R)
   graph.connect({
     fromNodeId: backingDaw.id,
-    fromPortId: backingDaw.outputs[0].id,
+    fromPortId: backingDaw.outputs[0].id, // Ext. Out 17 [L]
     toNodeId: auxStrip.id,
-    toPortId: auxStrip.inputs[0].id,
+    toPortId: auxStrip.inputs[0].id, // USB Return 17 [L]
+    color: 'var(--color-playback)'
+  });
+
+  graph.connect({
+    fromNodeId: backingDaw.id,
+    fromPortId: backingDaw.outputs[1].id, // Ext. Out 18 [R]
+    toNodeId: auxStrip.id,
+    toPortId: auxStrip.inputs[1].id, // USB Return 18 [R]
     color: 'var(--color-playback)'
   });
 
