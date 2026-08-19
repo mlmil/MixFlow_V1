@@ -16,8 +16,8 @@ export function buildZeroLatencyIEM() {
   const COL_OUT = 1640;
   const ROW_HEIGHT = 280;
 
-  // Output Buses (Column 5)
-  const mainPA = new OutputBusNode({ id: 'out_main_pa_zl', busType: 'main_lr', name: 'Main FOH PA (Stereo L/R)', x: COL_OUT, y: 80 });
+  // Output Buses (Column 5) - Separate Main PA Left & Right XLR Inputs
+  const mainPA = new OutputBusNode({ id: 'out_main_pa_zl', busType: 'main_lr', name: 'Main FOH PA', x: COL_OUT, y: 80 });
   graph.addNode(mainPA);
 
   const iem1 = new OutputBusNode({ id: 'out_iem_1_zl', busType: 'aux_iem', auxIndex: 1, name: 'Aux 1: Lead Vox IEM (0ms Direct)', x: COL_OUT, y: 360 });
@@ -25,11 +25,11 @@ export function buildZeroLatencyIEM() {
   graph.addNode(iem1);
   graph.addNode(iem2);
 
-  // 1. LEAD VOCAL WITH STEREO EFFECTS (Row 0: Ch 1 in -> Ableton Ext. Out 1/2 Dual L/R -> XR18 Strip 1/2)
+  // 1. LEAD VOCAL WITH STEREO EFFECTS (Row 0: Ch 1 in -> Ableton Ext. Out 1/2 Dual L/R -> XR18 Strip 1/2 Dual L/R)
   const leadVoxIn = new StageInputNode({
     id: 'in_lead_vox',
     channelIndex: 1,
-    name: 'Lead Vox (Mic 1)',
+    name: 'Kyle Vox (Mic 1)',
     gain: 32,
     phantom: true,
     x: COL_IN,
@@ -46,7 +46,7 @@ export function buildZeroLatencyIEM() {
 
   const leadAbleton = new AbletonLiveNode({
     id: 'daw_lead_stereo',
-    trackName: 'Lead Vox (Autotune + Stereo Verb/Delay)',
+    trackName: 'Kyle Vox (Live FX)',
     plugins: ['Antares Auto-Tune Live', 'CLA-76 Vocal Comp', 'Valhalla Stereo VintageVerb', 'MicroShift Widener'],
     isStereoOut: true,
     outputChannel: 1,
@@ -57,7 +57,7 @@ export function buildZeroLatencyIEM() {
   const leadStereoStrip = new ChannelStripNode({
     id: 'strip_lead_stereo',
     channelIndex: 1,
-    name: 'Lead Vox FX Return',
+    name: 'Kyle Vox FX Return',
     isStereoPair: true,
     rtnsw: true,
     fader: 0,
@@ -114,12 +114,20 @@ export function buildZeroLatencyIEM() {
     color: 'var(--color-playback)'
   });
 
-  // Lead: Strip Stereo Out -> Main FOH PA
+  // Lead: Dual Stereo Cables from Strip 1/2 to Main FOH PA (Left and Right)
   graph.connect({
     fromNodeId: leadStereoStrip.id,
-    fromPortId: leadStereoStrip.outputs.find(p => p.name.includes('Main')).id,
+    fromPortId: leadStereoStrip.outputs[0].id, // Main Out 1 [L]
     toNodeId: mainPA.id,
-    toPortId: mainPA.inputs[0].id,
+    toPortId: mainPA.inputs[0].id, // Main In [L]
+    color: 'var(--color-main)'
+  });
+
+  graph.connect({
+    fromNodeId: leadStereoStrip.id,
+    fromPortId: leadStereoStrip.outputs[1].id, // Main Out 2 [R]
+    toNodeId: mainPA.id,
+    toPortId: mainPA.inputs[1].id, // Main In [R]
     color: 'var(--color-main)'
   });
 
@@ -249,7 +257,7 @@ export function buildZeroLatencyIEM() {
   graph.addNode(backingDaw);
   graph.addNode(auxStrip);
 
-  // Dual Cables for Backing Tracks (L and R)
+  // Dual Cables for Backing Tracks (L and R from Ableton)
   graph.connect({
     fromNodeId: backingDaw.id,
     fromPortId: backingDaw.outputs[0].id, // Ext. Out 17 [L]
@@ -266,11 +274,20 @@ export function buildZeroLatencyIEM() {
     color: 'var(--color-playback)'
   });
 
+  // Dual Red Cables from Backing Tracks to Main PA (L and R)
   graph.connect({
     fromNodeId: auxStrip.id,
-    fromPortId: auxStrip.outputs.find(p => p.name.includes('Main')).id,
+    fromPortId: auxStrip.outputs[0].id, // Main Out 17 [L]
     toNodeId: mainPA.id,
-    toPortId: mainPA.inputs[0].id,
+    toPortId: mainPA.inputs[0].id, // Main In [L]
+    color: 'var(--color-main)'
+  });
+
+  graph.connect({
+    fromNodeId: auxStrip.id,
+    fromPortId: auxStrip.outputs[1].id, // Main Out 18 [R]
+    toNodeId: mainPA.id,
+    toPortId: mainPA.inputs[1].id, // Main In [R]
     color: 'var(--color-main)'
   });
 

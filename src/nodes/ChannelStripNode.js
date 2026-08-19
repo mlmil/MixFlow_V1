@@ -36,6 +36,8 @@ export class ChannelStripNode extends Node {
 
     if (isStereoPair) {
       this.title = `Strip ${channelIndex}/${channelIndex+1} [Stereo]: ${this.getProperty('name')}`;
+      
+      // Dual Stereo Inputs: Left & Right
       this.addPort(new Port({
         id: `strip_usb_in_l_${this.id}`,
         name: `USB Return ${channelIndex} [L]`,
@@ -50,8 +52,25 @@ export class ChannelStripNode extends Node {
         type: 'usb',
         color: 'var(--color-playback)'
       }));
+
+      // Dual Stereo Outputs: Main PA Left & Main PA Right
+      this.addPort(new Port({
+        id: `strip_main_out_l_${this.id}`,
+        name: `Main Out ${channelIndex} [L]`,
+        direction: 'output',
+        type: 'main',
+        color: 'var(--color-main)'
+      }));
+      this.addPort(new Port({
+        id: `strip_main_out_r_${this.id}`,
+        name: `Main Out ${channelIndex+1} [R]`,
+        direction: 'output',
+        type: 'main',
+        color: 'var(--color-main)'
+      }));
     } else {
       this.title = `Strip ${channelIndex}: ${this.getProperty('name')}`;
+      
       this.addPort(new Port({
         id: `strip_analog_in_${this.id}`,
         name: `Analog In (XLR ${channelIndex})`,
@@ -66,17 +85,18 @@ export class ChannelStripNode extends Node {
         type: 'usb',
         color: 'var(--color-playback)'
       }));
+
+      // Single Output for Mono Strip
+      this.addPort(new Port({
+        id: `strip_main_out_l_${this.id}`,
+        name: `Main Out (Ch ${channelIndex})`,
+        direction: 'output',
+        type: 'main',
+        color: 'var(--color-main)'
+      }));
     }
 
-    // Outputs: Main LR Out & Aux IEM Bus Sends
-    this.addPort(new Port({
-      id: `strip_main_out_${this.id}`,
-      name: isStereoPair ? 'Main PA Out (Stereo L/R)' : 'Main LR Out',
-      direction: 'output',
-      type: 'main',
-      color: 'var(--color-main)'
-    }));
-
+    // Aux IEM Bus Sends
     this.addPort(new Port({
       id: `strip_aux_out_${this.id}`,
       name: 'Aux IEM Sends (1-6)',

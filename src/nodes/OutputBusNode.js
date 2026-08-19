@@ -22,12 +22,31 @@ export class OutputBusNode extends Node {
       }
     });
 
-    this.addPort(new Port({
-      id: `bus_in_${this.id}`,
-      name: busType === 'main_lr' ? 'Master L/R Sum In' : `Aux ${auxIndex} Sum In`,
-      direction: 'input',
-      type: busType === 'main_lr' ? 'main' : 'bus'
-    }));
+    if (busType === 'main_lr') {
+      // Distinct Left & Right Master XLR Input Jacks
+      this.addPort(new Port({
+        id: `bus_in_l_${this.id}`,
+        name: 'Main In [L] (XLR L)',
+        direction: 'input',
+        type: 'main',
+        color: 'var(--color-main)'
+      }));
+      this.addPort(new Port({
+        id: `bus_in_r_${this.id}`,
+        name: 'Main In [R] (XLR R)',
+        direction: 'input',
+        type: 'main',
+        color: 'var(--color-main)'
+      }));
+    } else {
+      this.addPort(new Port({
+        id: `bus_in_${this.id}`,
+        name: `Aux ${auxIndex} Sum In`,
+        direction: 'input',
+        type: 'bus',
+        color: 'var(--color-iem)'
+      }));
+    }
   }
 
   static fromJSON(data) {

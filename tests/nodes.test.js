@@ -82,7 +82,7 @@ describe('XR18 & Ableton Node Library', () => {
     });
 
     expect(mainPA.category).toBe('main');
-    expect(mainPA.inputs.length).toBe(1);
+    expect(mainPA.inputs.length).toBe(2); // Main In [L] & Main In [R]
     expect(iemBus.category).toBe('bus');
     expect(iemBus.inputs.length).toBe(1);
   });
