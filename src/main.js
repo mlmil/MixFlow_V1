@@ -38,9 +38,11 @@ function initApp() {
   const inspector = new Inspector({ container: document.body, graph, toneGen });
 
   // Clicking any node selects it in the Inspector
+  renderer.onNodeSelect = (nodeId) => inspector.select(nodeId);
+
   container.addEventListener('click', (e) => {
     const nodeEl = e.target.closest('.graph-node');
-    if (nodeEl) {
+    if (nodeEl && !e.target.closest('.port-socket') && !e.target.closest('button') && !e.target.closest('input')) {
       const nodeId = nodeEl.id.replace('dom_', '');
       inspector.select(nodeId);
     }
