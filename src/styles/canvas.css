@@ -60,6 +60,7 @@
   stroke: var(--color-vocal);
   stroke-width: 3px;
   stroke-dasharray: 4 4;
+  pointer-events: none !important;
 }
 
 /* Node Styling */

@@ -234,10 +234,10 @@ export class CanvasRenderer {
     if (!node) return null;
 
     const nodeEl = this.nodeElements.get(nodeId);
-    if (!nodeEl) return { x: node.x, y: node.y };
+    if (!nodeEl) return null;
 
     const socket = nodeEl.querySelector(`[data-port-id="${portId}"]`);
-    if (!socket) return { x: node.x, y: node.y };
+    if (!socket) return null;
 
     const nodeRect = nodeEl.getBoundingClientRect();
     const socketRect = socket.getBoundingClientRect();

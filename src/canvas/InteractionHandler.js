@@ -137,7 +137,10 @@ export class InteractionHandler {
 
     if (this.pendingWire) {
       this.renderer.hidePendingWire();
-      const targetSocket = e.target.closest('.port-socket');
+      
+      const elem = document.elementFromPoint(e.clientX, e.clientY);
+      const targetSocket = elem ? (elem.closest('.port-socket') || elem.closest('.node-port-item')?.querySelector('.port-socket')) : null;
+
       if (targetSocket) {
         const targetNodeId = targetSocket.dataset.nodeId;
         const targetPortId = targetSocket.dataset.portId;
