@@ -23,7 +23,7 @@ export class InteractionHandler {
   }
 
   onMouseDown(e) {
-    const socket = e.target.closest('.port-socket');
+    const socket = e.target.closest('.port-socket') || e.target.closest('.port-item')?.querySelector('.port-socket');
     if (socket) {
       this.startWireDrag(socket, e);
       return;
@@ -139,7 +139,7 @@ export class InteractionHandler {
       this.renderer.hidePendingWire();
       
       const elem = document.elementFromPoint(e.clientX, e.clientY);
-      const targetSocket = elem ? (elem.closest('.port-socket') || elem.closest('.node-port-item')?.querySelector('.port-socket')) : null;
+      const targetSocket = elem ? (elem.closest('.port-socket') || elem.closest('.port-item')?.querySelector('.port-socket')) : null;
 
       if (targetSocket) {
         const targetNodeId = targetSocket.dataset.nodeId;
