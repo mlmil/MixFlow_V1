@@ -1,6 +1,7 @@
 import { Node } from './Node.js';
 import { Connection } from './Connection.js';
 import { Port } from './Port.js';
+import { NodeRegistry } from '../nodes/NodeRegistry.js';
 
 export class Graph {
   constructor() {
@@ -68,15 +69,15 @@ export class Graph {
     }
 
     // Strict Type Safety:
-    // USB outputs (from DAW tracks or USB sends) can ONLY connect to USB inputs
+    // USB outputs can only connect to USB inputs
     if (fromPort.type === 'usb' && toPort.type !== 'usb') {
-      console.warn(`MixFlow: Blocked invalid connection from USB port '${fromPort.name}' to analog/incompatible port '${toPort.name}'`);
+      console.warn(`MixFlow: Blocked connection from USB port '${fromPort.name}' to non-USB port '${toPort.name}'`);
       return null;
     }
 
-    // Analog outputs (from Stage preamps) can only connect to analog audio in or USB send matrix in
+    // Analog outputs can only connect to analog audio in or USB send matrix in
     if (fromPort.type === 'audio' && toPort.type === 'usb') {
-      console.warn(`MixFlow: Blocked invalid connection from Analog audio port '${fromPort.name}' to USB port '${toPort.name}'`);
+      console.warn(`MixFlow: Blocked connection from Analog audio port '${fromPort.name}' to USB port '${toPort.name}'`);
       return null;
     }
 
@@ -146,13 +147,22 @@ export class Graph {
     const graph = new Graph();
     if (!data || !data.nodes) return graph;
 
+    const reg = registry || NodeRegistry;
+
     data.nodes.forEach(nodeData => {
-      const NodeClass = (registry && typeof registry.get === 'function')
-        ? (registry.get(nodeData.category) || Node)
-        : Node;
-      const node = (typeof NodeClass.fromJSON === 'function') 
-        ? NodeClass.fromJSON(nodeData)
-        : new Node(nodeData);
+      let node;
+      if (reg) {
+        if (typeof reg.deserialize === 'function') {
+          node = reg.deserialize(nodeData);
+        } else if (typeof reg.get === 'function') {
+          const NodeClass = reg.get(nodeData.category) || Node;
+          node = (typeof NodeClass.fromJSON === 'function') ? NodeClass.fromJSON(nodeData) : new NodeClass(nodeData);
+        } else if (reg[nodeData.category]) {
+          const NodeClass = reg[nodeData.category];
+          node = (typeof NodeClass.fromJSON === 'function') ? NodeClass.fromJSON(nodeData) : new NodeClass(nodeData);
+        }
+      }
+      if (!node) node = Node.fromJSON(nodeData);
       graph.addNode(node);
     });
 

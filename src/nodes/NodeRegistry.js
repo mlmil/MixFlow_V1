@@ -12,6 +12,10 @@ export const NodeRegistry = {
   bus: OutputBusNode,
   main: OutputBusNode,
 
+  get(category) {
+    return this[category] || null;
+  },
+
   create(category, options) {
     const ClassObj = this[category];
     if (!ClassObj) {
@@ -24,7 +28,7 @@ export const NodeRegistry = {
     const category = data.category;
     const ClassObj = this[category];
     if (!ClassObj) {
-      throw new Error(`Unknown node category for deserialization: ${category}`);
+      return null;
     }
 
     if (typeof ClassObj.fromJSON === 'function') {
