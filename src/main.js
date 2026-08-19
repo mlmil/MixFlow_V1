@@ -1,3 +1,8 @@
+import './styles/theme.css';
+import './styles/canvas.css';
+import './styles/copilot.css';
+import './styles/main.css';
+
 import { Graph } from './graph/Graph.js';
 import { CanvasRenderer } from './canvas/CanvasRenderer.js';
 import { InteractionHandler } from './canvas/InteractionHandler.js';
@@ -16,8 +21,13 @@ import { AbletonLiveNode } from './nodes/AbletonLiveNode.js';
 import { ChannelStripNode } from './nodes/ChannelStripNode.js';
 import { OutputBusNode } from './nodes/OutputBusNode.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   const container = document.getElementById('canvas-container');
+  if (!container) {
+    console.error('MixFlow: canvas-container element not found');
+    return;
+  }
+
   let activeTemplateId = 'zeroLatencyIEM';
   let graph = TemplateManager.loadTemplate(activeTemplateId) || new Graph();
 
@@ -39,23 +49,24 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateLinterStatus() {
     const diagnostics = RoutingLinter.lint(graph);
     const pill = document.getElementById('status-pill');
+    if (!pill) return;
     const dot = pill.querySelector('.status-dot');
     const text = document.getElementById('status-text');
 
     const errors = diagnostics.filter(d => d.severity === 'error');
     const warnings = diagnostics.filter(d => d.severity === 'warning');
 
-    dot.className = 'status-dot';
+    if (dot) dot.className = 'status-dot';
 
     if (errors.length > 0) {
-      dot.classList.add('error');
-      text.textContent = `${errors.length} Conflict${errors.length > 1 ? 's' : ''}`;
+      if (dot) dot.classList.add('error');
+      if (text) text.textContent = `${errors.length} Conflict${errors.length > 1 ? 's' : ''}`;
     } else if (warnings.length > 0) {
-      dot.classList.add('warning');
-      text.textContent = `${warnings.length} Warning${warnings.length > 1 ? 's' : ''}`;
+      if (dot) dot.classList.add('warning');
+      if (text) text.textContent = `${warnings.length} Warning${warnings.length > 1 ? 's' : ''}`;
     } else {
-      dot.classList.add('valid');
-      text.textContent = 'Routing Valid (Clean)';
+      if (dot) dot.classList.add('valid');
+      if (text) text.textContent = 'Routing Valid (Clean)';
     }
 
     renderer.nodeElements.forEach((el, nodeId) => {
@@ -73,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Populate Templates Dropdown
   const templateSelect = document.getElementById('template-select');
   function refreshTemplateOptions(selectedId = activeTemplateId) {
+    if (!templateSelect) return;
     activeTemplateId = selectedId;
     templateSelect.innerHTML = '';
     const all = TemplateManager.getAllTemplates();
@@ -129,142 +141,180 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Template Switcher
-  templateSelect.addEventListener('change', (e) => {
-    loadTemplateIntoCanvas(e.target.value);
-  });
+  if (templateSelect) {
+    templateSelect.addEventListener('change', (e) => {
+      loadTemplateIntoCanvas(e.target.value);
+    });
+  }
 
   // Open Template Editor & Manager Modal
-  document.getElementById('btn-manage-templates').addEventListener('click', () => {
-    TemplateEditorModal.open({
-      activeTemplateId,
-      graph,
-      onTemplateChange: (newId, shouldLoad = false) => {
-        refreshTemplateOptions(newId);
-        if (shouldLoad) {
-          loadTemplateIntoCanvas(newId);
+  const btnManageTemplates = document.getElementById('btn-manage-templates');
+  if (btnManageTemplates) {
+    btnManageTemplates.addEventListener('click', () => {
+      TemplateEditorModal.open({
+        activeTemplateId,
+        graph,
+        onTemplateChange: (newId, shouldLoad = false) => {
+          refreshTemplateOptions(newId);
+          if (shouldLoad) {
+            loadTemplateIntoCanvas(newId);
+          }
         }
-      }
+      });
     });
-  });
+  }
 
   // Inspector & Co-Pilot Toggles
-  document.getElementById('btn-inspector-toggle').addEventListener('click', () => {
-    if (inspector.isOpen) {
-      inspector.close();
-    } else {
-      const firstNode = graph.nodes.values().next().value;
-      if (firstNode) inspector.select(firstNode.id);
-      else inspector.open();
-    }
-  });
+  const btnInspectorToggle = document.getElementById('btn-inspector-toggle');
+  if (btnInspectorToggle) {
+    btnInspectorToggle.addEventListener('click', () => {
+      if (inspector.isOpen) {
+        inspector.close();
+      } else {
+        const firstNode = graph.nodes.values().next().value;
+        if (firstNode) inspector.select(firstNode.id);
+        else inspector.open();
+      }
+    });
+  }
 
-  document.getElementById('btn-copilot-toggle').addEventListener('click', () => {
-    copilot.toggle();
-  });
+  const btnCopilotToggle = document.getElementById('btn-copilot-toggle');
+  if (btnCopilotToggle) {
+    btnCopilotToggle.addEventListener('click', () => {
+      copilot.toggle();
+    });
+  }
 
   // Tone Generator Modal
-  document.getElementById('btn-tone-gen').addEventListener('click', () => {
-    showToneGenModal(toneGen);
-  });
+  const btnToneGen = document.getElementById('btn-tone-gen');
+  if (btnToneGen) {
+    btnToneGen.addEventListener('click', () => {
+      showToneGenModal(toneGen);
+    });
+  }
 
   // Export Mixing Station JSON
-  document.getElementById('btn-export-json').addEventListener('click', () => {
-    const json = exportMixingStationJSON(graph);
-    const jsonStr = JSON.stringify(json, null, 2);
-    showModal('Mixing Station JSON Export', jsonStr, 'mixing_station_scene.json', 'application/json');
-  });
+  const btnExportJson = document.getElementById('btn-export-json');
+  if (btnExportJson) {
+    btnExportJson.addEventListener('click', () => {
+      const json = exportMixingStationJSON(graph);
+      const jsonStr = JSON.stringify(json, null, 2);
+      showModal('Mixing Station JSON Export', jsonStr, 'mixing_station_scene.json', 'application/json');
+    });
+  }
 
   // Export XR18 .xair Snapshot
-  document.getElementById('btn-export-osc').addEventListener('click', () => {
-    const oscText = exportXAirSnapshot(graph);
-    showModal('XR18 Native OSC Snapshot (.xair)', oscText, 'xr18_routing_snapshot.xair.txt', 'text/plain');
-  });
+  const btnExportOsc = document.getElementById('btn-export-osc');
+  if (btnExportOsc) {
+    btnExportOsc.addEventListener('click', () => {
+      const oscText = exportXAirSnapshot(graph);
+      showModal('XR18 Native OSC Snapshot (.xair)', oscText, 'xr18_routing_snapshot.xair.txt', 'text/plain');
+    });
+  }
 
   // Import Dialog
-  document.getElementById('btn-import').addEventListener('click', () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json,.txt,.xair,.scn';
-    input.onchange = (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        try {
-          const parsed = JSON.parse(evt.target.result);
-          const imported = ConfigImporter.importJSON(parsed);
-          graph.clear();
-          imported.nodes.forEach(n => graph.addNode(n));
-          renderer.renderAll();
-          updateLinterStatus();
-        } catch (err) {
-          alert('Could not parse imported configuration file. Please ensure it is valid Mixing Station JSON.');
-        }
+  const btnImport = document.getElementById('btn-import');
+  if (btnImport) {
+    btnImport.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json,.txt,.xair,.scn';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const parsed = JSON.parse(evt.target.result);
+            const imported = ConfigImporter.importJSON(parsed);
+            graph.clear();
+            imported.nodes.forEach(n => graph.addNode(n));
+            renderer.renderAll();
+            updateLinterStatus();
+          } catch (err) {
+            alert('Could not parse imported configuration file. Please ensure it is valid Mixing Station JSON.');
+          }
+        };
+        reader.readAsText(file);
       };
-      reader.readAsText(file);
-    };
-    input.click();
-  });
+      input.click();
+    });
+  }
 
   // Pan / Zoom Toolbar Controls
   const zoomLevelText = document.getElementById('zoom-level');
   container.addEventListener('canvasTransform', (e) => {
-    zoomLevelText.textContent = `${Math.round(e.detail.zoom * 100)}%`;
+    if (zoomLevelText) zoomLevelText.textContent = `${Math.round(e.detail.zoom * 100)}%`;
   });
 
-  document.getElementById('btn-zoom-in').addEventListener('click', () => {
-    renderer.setZoom(renderer.zoom * 1.2);
-  });
+  const btnZoomIn = document.getElementById('btn-zoom-in');
+  if (btnZoomIn) {
+    btnZoomIn.addEventListener('click', () => {
+      renderer.setZoom(renderer.zoom * 1.2);
+    });
+  }
 
-  document.getElementById('btn-zoom-out').addEventListener('click', () => {
-    renderer.setZoom(renderer.zoom / 1.2);
-  });
+  const btnZoomOut = document.getElementById('btn-zoom-out');
+  if (btnZoomOut) {
+    btnZoomOut.addEventListener('click', () => {
+      renderer.setZoom(renderer.zoom / 1.2);
+    });
+  }
 
-  document.getElementById('btn-zoom-fit').addEventListener('click', () => {
-    renderer.setZoom(0.75);
-    renderer.setPan(60, 60);
-  });
+  const btnZoomFit = document.getElementById('btn-zoom-fit');
+  if (btnZoomFit) {
+    btnZoomFit.addEventListener('click', () => {
+      renderer.setZoom(0.75);
+      renderer.setPan(60, 60);
+    });
+  }
 
-  document.getElementById('btn-clear-canvas').addEventListener('click', () => {
-    if (confirm('Clear entire routing canvas?')) {
-      graph.clear();
-      updateLinterStatus();
-    }
-  });
-
-  // Add Node Menu
-  document.getElementById('btn-add-node').addEventListener('click', () => {
-    const nodeTypes = [
-      { label: 'XLR Stage Preamp (Input)', category: 'input' },
-      { label: 'XR18 USB Send Tap', category: 'usb_send' },
-      { label: 'Ableton Live DAW Track', category: 'daw' },
-      { label: 'XR18 Channel Strip', category: 'strip' },
-      { label: 'Aux IEM Monitor Bus', category: 'bus' }
-    ];
-
-    const pick = prompt('Choose node type to add:\n1: XLR Stage Preamp\n2: USB Send Tap\n3: Ableton DAW Track\n4: Channel Strip\n5: Aux IEM Bus', '1');
-    if (!pick) return;
-
-    const idx = parseInt(pick, 10) - 1;
-    if (idx >= 0 && idx < nodeTypes.length) {
-      let newNode;
-      const x = 300;
-      const y = 300;
-
-      switch (nodeTypes[idx].category) {
-        case 'input': newNode = new StageInputNode({ channelIndex: graph.nodes.size + 1, x, y }); break;
-        case 'usb_send': newNode = new USBSendMatrixNode({ channelIndex: graph.nodes.size + 1, x, y }); break;
-        case 'daw': newNode = new AbletonLiveNode({ trackName: 'New Live Track', x, y }); break;
-        case 'strip': newNode = new ChannelStripNode({ channelIndex: graph.nodes.size + 1, x, y }); break;
-        case 'bus': newNode = new OutputBusNode({ busType: 'aux_iem', auxIndex: 3, x, y }); break;
-      }
-
-      if (newNode) {
-        graph.addNode(newNode);
+  const btnClearCanvas = document.getElementById('btn-clear-canvas');
+  if (btnClearCanvas) {
+    btnClearCanvas.addEventListener('click', () => {
+      if (confirm('Clear entire routing canvas?')) {
+        graph.clear();
         updateLinterStatus();
       }
-    }
-  });
+    });
+  }
+
+  // Add Node Menu
+  const btnAddNode = document.getElementById('btn-add-node');
+  if (btnAddNode) {
+    btnAddNode.addEventListener('click', () => {
+      const nodeTypes = [
+        { label: 'XLR Stage Preamp (Input)', category: 'input' },
+        { label: 'XR18 USB Send Tap', category: 'usb_send' },
+        { label: 'Ableton Live DAW Track', category: 'daw' },
+        { label: 'XR18 Channel Strip', category: 'strip' },
+        { label: 'Aux IEM Monitor Bus', category: 'bus' }
+      ];
+
+      const pick = prompt('Choose node type to add:\n1: XLR Stage Preamp\n2: USB Send Tap\n3: Ableton DAW Track\n4: Channel Strip\n5: Aux IEM Bus', '1');
+      if (!pick) return;
+
+      const idx = parseInt(pick, 10) - 1;
+      if (idx >= 0 && idx < nodeTypes.length) {
+        let newNode;
+        const x = 300;
+        const y = 300;
+
+        switch (nodeTypes[idx].category) {
+          case 'input': newNode = new StageInputNode({ channelIndex: graph.nodes.size + 1, x, y }); break;
+          case 'usb_send': newNode = new USBSendMatrixNode({ channelIndex: graph.nodes.size + 1, x, y }); break;
+          case 'daw': newNode = new AbletonLiveNode({ trackName: 'New Live Track', x, y }); break;
+          case 'strip': newNode = new ChannelStripNode({ channelIndex: graph.nodes.size + 1, x, y }); break;
+          case 'bus': newNode = new OutputBusNode({ busType: 'aux_iem', auxIndex: 3, x, y }); break;
+        }
+
+        if (newNode) {
+          graph.addNode(newNode);
+          updateLinterStatus();
+        }
+      }
+    });
+  }
 
   function showToneGenModal(tg) {
     const overlay = document.createElement('div');
@@ -394,4 +444,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.body.appendChild(overlay);
   }
-});
+}
+
+// Immediate + Safe DOM Ready Initialization for Safari & Chromium
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
