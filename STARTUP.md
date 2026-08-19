@@ -1,27 +1,61 @@
-# 🚀 MixFlow Startup & Quick Reference Guide
+# 🚀 MixFlow Installation & Startup Guide
 
-This document contains step-by-step instructions for running, testing, building, and deploying the **MixFlow** visual routing application for Behringer XR18 and Ableton Live.
+This guide contains complete installation, setup, and startup instructions for **MixFlow** — the visual node router and linter for Behringer XR18 / X Air 18 mixers and Ableton Live.
 
 ---
 
-## ⚡ Quick Start (Run Locally)
+## 📋 Prerequisites
 
-### 1. Navigate to the App Directory
-```bash
-cd "/Volumes/VADER/Projects/MixStationUI/GITHUB REPOS/mixflow-ui"
-```
+Before installing, ensure you have the following installed on your machine:
+- **Node.js**: `v18.0.0` or higher (Recommended: LTS v20+)
+  - Check version: `node -v`
+  - Download if needed: [https://nodejs.org](https://nodejs.org)
+- **npm**: `v9.0.0` or higher
+  - Check version: `npm -v`
+- **Git**:
+  - Check version: `git --version`
 
-### 2. Install Dependencies (First time only)
+---
+
+## 📦 Installation Options
+
+### Option A: Fresh Clone from GitHub (Recommended for new machines)
+
 ```bash
+# 1. Clone the repository
+git clone https://github.com/mlmil/MixFlow_V1.git
+
+# 2. Navigate into the project folder
+cd MixFlow_V1
+
+# 3. Install all project dependencies
 npm install
 ```
 
-### 3. Start the Development Server
+---
+
+### Option B: Local Setup (From Working Directory)
+
+If you are already working in the project directory:
+
+```bash
+# 1. Navigate to the app folder
+cd "/Volumes/VADER/Projects/MixStationUI/GITHUB REPOS/mixflow-ui"
+
+# 2. Install dependencies
+npm install
+```
+
+---
+
+## ⚡ Starting the Application
+
+### 1. Launch the Development Server
 ```bash
 npm run dev
 ```
 
-### 4. Open in Your Browser
+### 2. Open in Your Browser
 Once Vite starts, open Safari or Chrome at:
 
 👉 **[http://localhost:3000](http://localhost:3000)**  
@@ -31,27 +65,27 @@ Once Vite starts, open Safari or Chrome at:
 
 ## 🧪 Testing & Verification
 
-Run the automated Vitest test suite (validates node DAG, linter rules, template loading, and OSC snapshot generator):
+Run the automated test suite to ensure the node graph, linter rules, template manager, and OSC snapshot exporters are working properly:
 
 ```bash
-# Run test suite once
+# Run all 21 automated unit tests
 npm test
 
-# Run tests in watch mode
+# Run tests in live watch mode (re-runs on file save)
 npx vitest
 ```
 
 ---
 
-## 📦 Production Build
+## 🏗️ Production Build
 
-To create an optimized production build for distribution:
+To compile and bundle the web application for standalone production hosting:
 
 ```bash
+# Build the production bundle into dist/
 npm run build
-```
-Output files will be generated in `dist/`. You can preview the production bundle with:
-```bash
+
+# Preview the production build locally
 npm run preview
 ```
 
@@ -59,31 +93,39 @@ npm run preview
 
 ## 🛠️ Troubleshooting & Tips
 
-### 1. Browser shows a blank/white screen on reload
-- Press **`⌘ + Shift + R`** in Safari/Chrome to bypass the cache and hard-refresh.
-- Ensure the dev server is active in your terminal.
+### 1. Safari Shows a White/Blank Screen
+- Safari may cache an earlier load. Press **`⌘ + Shift + R`** (Command + Shift + R) to perform a hard refresh.
+- Ensure the terminal process running `npm run dev` is active.
 
-### 2. Port 3000 already in use
-If another process is using port 3000, you can kill existing node servers or start on a custom port:
+### 2. Port 3000 is Already in Use
+If port 3000 is occupied by another process, kill existing node servers or start on another port:
 ```bash
-# Kill node processes running in background
+# Kill lingering background node processes
 killall node
 
-# Start on a custom port
-npx vite --port 3001 --host
+# Or specify a custom port
+npx vite --port 3001 --host 0.0.0.0
+```
+
+### 3. Node / npm Dependency Errors
+If you ever encounter missing dependencies or package lock mismatch:
+```bash
+# Clean install
+rm -rf node_modules package-lock.json
+npm install
 ```
 
 ---
 
-## 🐙 Git Repository
+## 🐙 Git Repository Details
 
-- **GitHub Repo**: [https://github.com/mlmil/MixFlow_V1](https://github.com/mlmil/MixFlow_V1)
-- **Primary Branch**: `main`
+- **GitHub Repository**: [https://github.com/mlmil/MixFlow_V1](https://github.com/mlmil/MixFlow_V1)
+- **Branch**: `main`
 
-### Push Updates to GitHub:
+### How to Push Updates:
 ```bash
 cd "/Volumes/VADER/Projects/MixStationUI/GITHUB REPOS/mixflow-ui"
 git add .
-git commit -m "feat: your update message"
+git commit -m "feat: describe your change"
 git push origin main
 ```
