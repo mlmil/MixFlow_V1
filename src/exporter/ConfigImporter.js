@@ -8,38 +8,43 @@ import { AbletonLiveNode } from '../nodes/AbletonLiveNode.js';
 
 export class ConfigImporter {
   static async import(rawContent) {
-    // If it's a binary ArrayBuffer / Uint8Array (e.g. .msz file)
+    // If it's binary (ArrayBuffer or Uint8Array, e.g. .msz file)
     if (rawContent instanceof ArrayBuffer || rawContent instanceof Uint8Array) {
       const u8 = rawContent instanceof Uint8Array ? rawContent : new Uint8Array(rawContent);
-      
-      // Try to uncompress .msz (which can be GZIP or ZIP)
-      try {
-        // Check magic bytes for GZIP (0x1f, 0x8b)
-        if (u8[0] === 0x1f && u8[1] === 0x8b) {
-          const decompressed = gunzipSync(u8);
-          const jsonText = strFromU8(decompressed);
-          return this.import(jsonText);
-        }
 
-        // Check magic bytes for ZIP (0x50, 0x4b)
-        if (u8[0] === 0x50 && u8[1] === 0x4b) {
-          const unzipped = unzipSync(u8);
-          // Find any json file in the archive
-          for (const filename of Object.keys(unzipped)) {
-            if (filename.endsWith('.json') || filename.endsWith('.scn') || filename.endsWith('.txt') || !filename.includes('.')) {
-              const text = strFromU8(unzipped[filename]);
-              const res = this.import(text);
-              if (res && res.nodes && res.nodes.size > 0) return res;
-            }
-          }
+      // Try GZIP decompression
+      if (u8[0] === 0x1f && u8[1] === 0x8b) {
+        try {
+          const decompressed = gunzipSync(u8);
+          const text = strFromU8(decompressed);
+          return this.import(text);
+        } catch (e) {
+          console.warn('GZIP decompression failed:', e);
         }
-      } catch (err) {
-        console.warn('Decompression failed, attempting text fallback:', err);
       }
 
-      // Fallback: decode as UTF-8 string
-      const decoder = new TextDecoder('utf-8');
-      return this.import(decoder.decode(u8));
+      // Try PKZip decompression
+      if (u8[0] === 0x50 && u8[1] === 0x4b) {
+        try {
+          const unzipped = unzipSync(u8);
+          for (const filename of Object.keys(unzipped)) {
+            const text = strFromU8(unzipped[filename]);
+            const res = await this.import(text);
+            if (res && res.nodes && res.nodes.size > 0) return res;
+          }
+        } catch (e) {
+          console.warn('ZIP decompression failed:', e);
+        }
+      }
+
+      // Fallback: try decoding as UTF-8
+      try {
+        const decoder = new TextDecoder('utf-8');
+        return this.import(decoder.decode(u8));
+      } catch (e) {
+        console.error('Binary decode failed:', e);
+      }
+      return new Graph();
     }
 
     if (typeof rawContent === 'string') {
@@ -53,27 +58,30 @@ export class ConfigImporter {
         }
       }
       return this.importOSCText(trimmed);
-    } else if (typeof rawContent === 'object') {
+    } else if (typeof rawContent === 'object' && rawContent !== null) {
       return this.importJSON(rawContent);
     }
+
     return new Graph();
   }
 
   static importJSON(jsonData) {
-    // If it's a full MixFlow graph serialization
+    if (!jsonData) return new Graph();
+
+    // 1. Direct MixFlow graph serialization
     if (jsonData.nodes && Array.isArray(jsonData.nodes)) {
       return Graph.fromJSON(jsonData);
     }
 
-    const graph = new Graph();
+    // 2. Extract channel definitions from any Mixing Station JSON structure
+    const extractedChannels = this.extractChannelsFromJSON(jsonData);
     
-    // Mixing Station layout / scene JSON formats:
-    // Format A: { channels: { "0": {...}, "1": {...} } }
-    // Format B: { channels: [ {...}, {...} ] }
-    // Format C: { scene: { channels: ... } }
-    const channelSource = jsonData.channels || jsonData.scene?.channels || jsonData.data?.channels || jsonData;
-    if (!channelSource) return graph;
+    // If no channels extracted, try fallback default channels
+    const channelsToBuild = Object.keys(extractedChannels).length > 0
+      ? extractedChannels
+      : this.createDefaultChannelMap();
 
+    const graph = new Graph();
     const COL_IN = 60;
     const COL_USB = 420;
     const COL_DAW = 800;
@@ -85,29 +93,26 @@ export class ConfigImporter {
       id: 'imported_main_pa',
       busType: 'main_lr',
       name: 'Main FOH PA',
-      masterFader: jsonData.mainLR?.fader || 0,
+      masterFader: jsonData.mainLR?.fader || jsonData.master?.fader || 0,
       x: COL_OUT,
       y: 80
     });
     graph.addNode(mainPA);
 
     let rowIndex = 0;
-    const entries = Array.isArray(channelSource)
-      ? channelSource.map((ch, i) => [i.toString(), ch])
-      : Object.entries(channelSource);
 
-    entries.forEach(([key, chData]) => {
-      if (!chData || typeof chData !== 'object') return;
-      const chIndex = chData.channelNumber || chData.index || (parseInt(key, 10) + 1);
-      if (chIndex < 1 || chIndex > 18) return;
+    Object.entries(channelsToBuild).forEach(([chKey, chData]) => {
+      const chIndex = parseInt(chKey, 10);
+      if (isNaN(chIndex) || chIndex < 1 || chIndex > 18) return;
 
       const yPos = 80 + rowIndex * ROW_HEIGHT;
       const isUSB = chData.rtnsw === 1 || chData.rtnsw === true || chData.source === 'usb' || chData.src === 'usb';
+      const name = chData.name || `Ch ${chIndex}`;
 
       const inputNode = new StageInputNode({
         id: `imported_in_${chIndex}`,
         channelIndex: chIndex,
-        name: chData.name || `Ch ${chIndex}`,
+        name: name,
         gain: chData.preampGain !== undefined ? chData.preampGain : (chData.gain || 24),
         phantom: !!chData.phantom || !!chData['48v'],
         invert: !!chData.invert || !!chData.inv,
@@ -126,7 +131,7 @@ export class ConfigImporter {
 
       const dawNode = new AbletonLiveNode({
         id: `imported_daw_${chIndex}`,
-        trackName: `${chData.name || `Ch ${chIndex}`} (Live FX)`,
+        trackName: `${name} (Live FX)`,
         outputChannel: chIndex,
         x: COL_DAW,
         y: yPos
@@ -135,7 +140,7 @@ export class ConfigImporter {
       const stripNode = new ChannelStripNode({
         id: `imported_strip_${chIndex}`,
         channelIndex: chIndex,
-        name: chData.name || `Ch ${chIndex}`,
+        name: name,
         rtnsw: isUSB,
         fader: chData.fader !== undefined ? chData.fader : 0,
         muted: chData.on === false || chData.mute === true,
@@ -181,6 +186,77 @@ export class ConfigImporter {
     });
 
     return graph;
+  }
+
+  static extractChannelsFromJSON(data) {
+    const channels = {};
+    if (!data || typeof data !== 'object') return channels;
+
+    const src = data.channels || data.scene?.channels || data.data?.channels || data;
+
+    if (src && typeof src === 'object' && !Array.isArray(src)) {
+      const isZeroIndexed = src['0'] !== undefined;
+      Object.entries(src).forEach(([k, v]) => {
+        if (v && typeof v === 'object') {
+          let chNum = v.channelNumber;
+          if (chNum === undefined) {
+            const parsed = parseInt(k.replace(/\D/g, ''), 10);
+            if (!isNaN(parsed)) {
+              chNum = isZeroIndexed ? parsed + 1 : parsed;
+            }
+          }
+          if (chNum >= 1 && chNum <= 18) {
+            channels[chNum] = { ...v, channelNumber: chNum };
+          }
+        }
+      });
+      if (Object.keys(channels).length > 0) return channels;
+    }
+
+    // Recursive scan fallback
+    const scan = (obj, depth = 0) => {
+      if (!obj || depth > 6) return;
+      if (Array.isArray(obj)) {
+        obj.forEach((item, idx) => {
+          if (item && typeof item === 'object') {
+            if (item.name || item.fader !== undefined || item.gain !== undefined) {
+              const chNum = item.channelNumber || item.index || (idx + 1);
+              if (chNum >= 1 && chNum <= 18) {
+                channels[chNum] = { ...channels[chNum], ...item, channelNumber: chNum };
+              }
+            }
+            scan(item, depth + 1);
+          }
+        });
+        return;
+      }
+      if (typeof obj === 'object') {
+        Object.entries(obj).forEach(([k, v]) => {
+          if (v && typeof v === 'object') {
+            const match = k.match(/^(?:ch|channel)?_?(\d+)$/i);
+            if (match) {
+              const parsed = parseInt(match[1], 10);
+              const chNum = parsed === 0 ? 1 : parsed;
+              if (chNum >= 1 && chNum <= 18) {
+                channels[chNum] = { ...channels[chNum], ...v, channelNumber: chNum };
+              }
+            }
+            scan(v, depth + 1);
+          }
+        });
+      }
+    };
+
+    scan(data);
+    return channels;
+  }
+
+  static createDefaultChannelMap() {
+    const defs = {};
+    for (let i = 1; i <= 8; i++) {
+      defs[i] = { name: `Channel ${i}`, preampGain: 24, rtnsw: true, fader: 0 };
+    }
+    return defs;
   }
 
   static importOSCText(oscText) {
