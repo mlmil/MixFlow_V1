@@ -28,8 +28,12 @@ function initApp() {
     return;
   }
 
-  let activeTemplateId = 'zeroLatencyIEM';
-  let graph = TemplateManager.loadTemplate(activeTemplateId) || new Graph();
+  let activeTemplateId = localStorage.getItem('mixflow_active_template') || 'zeroLatencyIEM';
+  let graph = TemplateManager.loadTemplate(activeTemplateId);
+  if (!graph) {
+    activeTemplateId = 'zeroLatencyIEM';
+    graph = TemplateManager.loadTemplate('zeroLatencyIEM') || new Graph();
+  }
 
   const toneGen = new ToneGenerator();
   let renderer = new CanvasRenderer({ container, graph });
@@ -133,6 +137,7 @@ function initApp() {
     const loaded = TemplateManager.loadTemplate(id);
     if (loaded) {
       activeTemplateId = id;
+      localStorage.setItem('mixflow_active_template', id);
       graph.clear();
       loaded.nodes.forEach(n => graph.addNode(n));
       loaded.connections.forEach(c => graph.connect(c));
@@ -169,8 +174,9 @@ function initApp() {
         const name = prompt('Enter a name for this custom template:', 'My Live Rig');
         if (!name) return;
         const newId = TemplateManager.saveCustomTemplate(name, 'Custom band setup', graph);
-        refreshTemplateOptions(newId);
         activeTemplateId = newId;
+        localStorage.setItem('mixflow_active_template', newId);
+        refreshTemplateOptions(newId);
         alert(`Rig saved as "${name}"!`);
       }
     });
