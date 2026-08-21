@@ -270,14 +270,21 @@ function initApp() {
         const reader = new FileReader();
         reader.onload = (evt) => {
           try {
-            const parsed = JSON.parse(evt.target.result);
-            const imported = ConfigImporter.importJSON(parsed);
-            graph.clear();
-            imported.nodes.forEach(n => graph.addNode(n));
-            renderer.renderAll();
-            updateLinterStatus();
+            const rawContent = evt.target.result;
+            const imported = ConfigImporter.import(rawContent);
+            if (imported && imported.nodes && imported.nodes.size > 0) {
+              graph.clear();
+              imported.nodes.forEach(n => graph.addNode(n));
+              imported.connections.forEach(c => graph.connect(c));
+              renderer.renderAll();
+              updateLinterStatus();
+              alert(`✓ Successfully imported ${imported.nodes.size} channels!`);
+            } else {
+              alert('Could not detect valid channel data in file.');
+            }
           } catch (err) {
-            alert('Could not parse imported configuration file. Please ensure it is valid Mixing Station JSON.');
+            console.error('Import error:', err);
+            alert('Could not parse imported configuration file. Please ensure it is a valid Mixing Station JSON or XR18 snapshot (.scn/.xair).');
           }
         };
         reader.readAsText(file);
