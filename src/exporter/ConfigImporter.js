@@ -1,3 +1,4 @@
+import { unzipSync, gunzipSync, strFromU8 } from 'fflate';
 import { Graph } from '../graph/Graph.js';
 import { StageInputNode } from '../nodes/StageInputNode.js';
 import { ChannelStripNode } from '../nodes/ChannelStripNode.js';
@@ -6,7 +7,41 @@ import { OutputBusNode } from '../nodes/OutputBusNode.js';
 import { AbletonLiveNode } from '../nodes/AbletonLiveNode.js';
 
 export class ConfigImporter {
-  static import(rawContent) {
+  static async import(rawContent) {
+    // If it's a binary ArrayBuffer / Uint8Array (e.g. .msz file)
+    if (rawContent instanceof ArrayBuffer || rawContent instanceof Uint8Array) {
+      const u8 = rawContent instanceof Uint8Array ? rawContent : new Uint8Array(rawContent);
+      
+      // Try to uncompress .msz (which can be GZIP or ZIP)
+      try {
+        // Check magic bytes for GZIP (0x1f, 0x8b)
+        if (u8[0] === 0x1f && u8[1] === 0x8b) {
+          const decompressed = gunzipSync(u8);
+          const jsonText = strFromU8(decompressed);
+          return this.import(jsonText);
+        }
+
+        // Check magic bytes for ZIP (0x50, 0x4b)
+        if (u8[0] === 0x50 && u8[1] === 0x4b) {
+          const unzipped = unzipSync(u8);
+          // Find any json file in the archive
+          for (const filename of Object.keys(unzipped)) {
+            if (filename.endsWith('.json') || filename.endsWith('.scn') || filename.endsWith('.txt') || !filename.includes('.')) {
+              const text = strFromU8(unzipped[filename]);
+              const res = this.import(text);
+              if (res && res.nodes && res.nodes.size > 0) return res;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Decompression failed, attempting text fallback:', err);
+      }
+
+      // Fallback: decode as UTF-8 string
+      const decoder = new TextDecoder('utf-8');
+      return this.import(decoder.decode(u8));
+    }
+
     if (typeof rawContent === 'string') {
       const trimmed = rawContent.trim();
       if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
@@ -31,7 +66,13 @@ export class ConfigImporter {
     }
 
     const graph = new Graph();
-    if (!jsonData || !jsonData.channels) return graph;
+    
+    // Mixing Station layout / scene JSON formats:
+    // Format A: { channels: { "0": {...}, "1": {...} } }
+    // Format B: { channels: [ {...}, {...} ] }
+    // Format C: { scene: { channels: ... } }
+    const channelSource = jsonData.channels || jsonData.scene?.channels || jsonData.data?.channels || jsonData;
+    if (!channelSource) return graph;
 
     const COL_IN = 60;
     const COL_USB = 420;
@@ -51,19 +92,25 @@ export class ConfigImporter {
     graph.addNode(mainPA);
 
     let rowIndex = 0;
+    const entries = Array.isArray(channelSource)
+      ? channelSource.map((ch, i) => [i.toString(), ch])
+      : Object.entries(channelSource);
 
-    Object.entries(jsonData.channels).forEach(([key, chData]) => {
-      const chIndex = chData.channelNumber || (parseInt(key, 10) + 1);
+    entries.forEach(([key, chData]) => {
+      if (!chData || typeof chData !== 'object') return;
+      const chIndex = chData.channelNumber || chData.index || (parseInt(key, 10) + 1);
+      if (chIndex < 1 || chIndex > 18) return;
+
       const yPos = 80 + rowIndex * ROW_HEIGHT;
-      const isUSB = chData.rtnsw === 1 || chData.rtnsw === true;
+      const isUSB = chData.rtnsw === 1 || chData.rtnsw === true || chData.source === 'usb' || chData.src === 'usb';
 
       const inputNode = new StageInputNode({
         id: `imported_in_${chIndex}`,
         channelIndex: chIndex,
         name: chData.name || `Ch ${chIndex}`,
-        gain: chData.preampGain || 24,
-        phantom: !!chData.phantom,
-        invert: !!chData.invert,
+        gain: chData.preampGain !== undefined ? chData.preampGain : (chData.gain || 24),
+        phantom: !!chData.phantom || !!chData['48v'],
+        invert: !!chData.invert || !!chData.inv,
         hpf: chData.hpf || 0,
         x: COL_IN,
         y: yPos
@@ -79,7 +126,7 @@ export class ConfigImporter {
 
       const dawNode = new AbletonLiveNode({
         id: `imported_daw_${chIndex}`,
-        trackName: `${chData.name || `Ch ${chIndex}`} FX`,
+        trackName: `${chData.name || `Ch ${chIndex}`} (Live FX)`,
         outputChannel: chIndex,
         x: COL_DAW,
         y: yPos
@@ -91,7 +138,7 @@ export class ConfigImporter {
         name: chData.name || `Ch ${chIndex}`,
         rtnsw: isUSB,
         fader: chData.fader !== undefined ? chData.fader : 0,
-        muted: chData.on === false,
+        muted: chData.on === false || chData.mute === true,
         x: COL_STRIP,
         y: yPos
       });

@@ -257,37 +257,37 @@ function initApp() {
     });
   }
 
-  // Import Dialog
+  // Import Dialog (supports .msz, .json, .scn, .xair, .txt)
   const btnImport = document.getElementById('btn-import');
   if (btnImport) {
     btnImport.addEventListener('click', () => {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = '.json,.txt,.xair,.scn';
+      input.accept = '.json,.txt,.xair,.scn,.msz';
       input.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (evt) => {
+        reader.onload = async (evt) => {
           try {
             const rawContent = evt.target.result;
-            const imported = ConfigImporter.import(rawContent);
+            const imported = await ConfigImporter.import(rawContent);
             if (imported && imported.nodes && imported.nodes.size > 0) {
               graph.clear();
               imported.nodes.forEach(n => graph.addNode(n));
               imported.connections.forEach(c => graph.connect(c));
               renderer.renderAll();
               updateLinterStatus();
-              alert(`✓ Successfully imported ${imported.nodes.size} channels!`);
+              alert(`✓ Successfully imported ${imported.nodes.size} channels from ${file.name}!`);
             } else {
-              alert('Could not detect valid channel data in file.');
+              alert('Could not detect valid channel data in this file.');
             }
           } catch (err) {
             console.error('Import error:', err);
-            alert('Could not parse imported configuration file. Please ensure it is a valid Mixing Station JSON or XR18 snapshot (.scn/.xair).');
+            alert('Could not parse imported configuration file. Please ensure it is a valid Mixing Station (.msz / .json) or XR18 snapshot (.scn / .xair).');
           }
         };
-        reader.readAsText(file);
+        reader.readAsArrayBuffer(file);
       };
       input.click();
     });
