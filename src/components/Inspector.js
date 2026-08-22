@@ -148,46 +148,46 @@ export class Inspector {
 
     this.inspectorContent.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 4px;">
-        <h3 style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${node.title}</h3>
-        <span style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase;">CATEGORY: ${node.category}</span>
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-primary);">${node.title}</h3>
+        <span style="font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase;">CATEGORY: ${node.category}</span>
       </div>
 
       <!-- Signal Path Summary (Natural Language) -->
-      <div class="signal-path-box" style="background: rgba(0, 229, 255, 0.06); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; display: flex; flex-direction: column; gap: 6px;">
-        <span style="font-size: 11px; font-weight: 700; color: var(--color-vocal); text-transform: uppercase; letter-spacing: 0.5px;">🛣️ Signal Path Story</span>
-        <div style="font-size: 11px; line-height: 1.5; color: var(--text-secondary);">
+      <div class="signal-path-box" style="background: rgba(0, 229, 255, 0.07); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 12px; font-weight: 800; color: var(--color-vocal); text-transform: uppercase; letter-spacing: 0.5px;">🛣️ Signal Path Story</span>
+        <div style="font-size: 13.5px; line-height: 1.6; color: var(--text-secondary);">
           ${this.generateSignalPathStory(node)}
         </div>
       </div>
 
       <!-- Mixing Station & Ableton Step-by-Step Setup Guide -->
-      <div class="ms-guide-box" style="background: rgba(255, 170, 0, 0.06); border: 1px solid rgba(255, 170, 0, 0.25); border-radius: var(--radius-sm); padding: 10px; display: flex; flex-direction: column; gap: 6px;">
-        <span style="font-size: 11px; font-weight: 700; color: var(--color-guitar); text-transform: uppercase; letter-spacing: 0.5px;">🎛️ Mixing Station & XR18 Setup Instructions</span>
-        <div style="font-size: 11px; line-height: 1.5; color: var(--text-primary);">
+      <div class="ms-guide-box" style="background: rgba(255, 170, 0, 0.07); border: 1px solid rgba(255, 170, 0, 0.3); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 12px; font-weight: 800; color: var(--color-guitar); text-transform: uppercase; letter-spacing: 0.5px;">🎛️ Mixing Station & XR18 Setup Instructions</span>
+        <div style="font-size: 13.5px; line-height: 1.6; color: var(--text-primary);">
           ${this.generateMixingStationInstructions(node)}
         </div>
       </div>
 
       <!-- Live Controls Box -->
-      <div class="inspector-controls-box" style="background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; display: flex; flex-direction: column; gap: 8px;">
-        <span style="font-size: 11px; font-weight: 700; color: var(--text-primary); text-transform: uppercase;">Node Parameters</span>
+      <div class="inspector-controls-box" style="background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+        <span style="font-size: 12px; font-weight: 800; color: var(--text-primary); text-transform: uppercase;">Node Parameters</span>
         ${this.renderNodeSpecificInspectorControls(node)}
-        <div style="display:flex; justify-content:flex-end; margin-top:4px;">
-          <button class="tool-btn btn-clear-node-wires" style="font-size:10px; padding:3px 8px; color:var(--status-error);" title="Disconnect all cables attached to this node">✂️ Clear Node Wires</button>
+        <div style="display:flex; justify-content:flex-end; margin-top:6px;">
+          <button class="tool-btn btn-clear-node-wires" style="font-size:11px; padding:4px 10px; color:var(--status-error);" title="Disconnect all cables attached to this node">✂️ Clear Node Wires</button>
         </div>
       </div>
 
       <!-- Tone Generator & Live Signal Level Meter Box -->
-      <div class="tone-gen-box" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+      <div class="tone-gen-box" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 10px;">
         <div style="display: flex; align-items: center; justify-content: space-between;">
-          <span style="font-size: 11px; font-weight: 600; color: var(--color-keys);">🔊 Test Tone / Signal Injector</span>
-          <button class="btn-tone-toggle tool-btn" style="font-size: 10px; padding: 3px 8px;">
+          <span style="font-size: 12px; font-weight: 700; color: var(--color-keys);">🔊 Test Tone / Signal Injector</span>
+          <button class="btn-tone-toggle tool-btn" style="font-size: 11px; padding: 4px 10px;">
             ${this.toneGen.isPlaying ? '⏹️ Stop Tone' : '▶️ Inject Tone'}
           </button>
         </div>
         
-        <div style="display: flex; gap: 6px; align-items: center; font-size: 10px;">
-          <select class="tone-type-select node-select" style="width: 100px; padding: 2px;">
+        <div style="display: flex; gap: 8px; align-items: center; font-size: 12px;">
+          <select class="tone-type-select node-select" style="width: 110px; padding: 4px;">
             <option value="sine" ${this.toneGen.type === 'sine' ? 'selected' : ''}>1kHz Sine</option>
             <option value="pink" ${this.toneGen.type === 'pink' ? 'selected' : ''}>Pink Noise</option>
             <option value="white" ${this.toneGen.type === 'white' ? 'selected' : ''}>White Noise</option>
@@ -196,12 +196,12 @@ export class Inspector {
         </div>
 
         <!-- Real-Time Hardware LED VU Level Meter -->
-        <div class="vu-meter-container" style="display: flex; flex-direction: column; gap: 4px; background: rgba(0, 0, 0, 0.4); border-radius: 4px; padding: 6px 8px; border: 1px solid var(--border-subtle); margin-top: 2px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9px; font-family: var(--font-mono); color: var(--text-muted);">
+        <div class="vu-meter-container" style="display: flex; flex-direction: column; gap: 6px; background: rgba(0, 0, 0, 0.4); border-radius: 6px; padding: 8px 10px; border: 1px solid var(--border-subtle); margin-top: 4px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-family: var(--font-mono); color: var(--text-muted);">
             <span>LIVE SIGNAL LEVEL</span>
             <span class="meter-db-readout" style="color: var(--color-keys); font-weight: 700;">${this.toneGen.isPlaying ? `${this.toneGen.levelDb} dBFS` : 'INACTIVE'}</span>
           </div>
-          <div class="vu-led-ladder" style="display: flex; gap: 3px; height: 10px; align-items: center;">
+          <div class="vu-led-ladder" style="display: flex; gap: 3px; height: 12px; align-items: center;">
             <div class="vu-led" data-idx="0" style="flex:1; height:100%; border-radius:2px; background: #13331c;"></div>
             <div class="vu-led" data-idx="1" style="flex:1; height:100%; border-radius:2px; background: #13331c;"></div>
             <div class="vu-led" data-idx="2" style="flex:1; height:100%; border-radius:2px; background: #13331c;"></div>
@@ -213,7 +213,7 @@ export class Inspector {
             <div class="vu-led" data-idx="8" style="flex:1; height:100%; border-radius:2px; background: #331813;"></div>
             <div class="vu-led" data-idx="9" style="flex:1; height:100%; border-radius:2px; background: #331313;"></div>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 8px; font-family: var(--font-mono); color: var(--text-muted); padding: 0 1px;">
+          <div style="display: flex; justify-content: space-between; font-size: 9.5px; font-family: var(--font-mono); color: var(--text-muted); padding: 0 1px;">
             <span>-48</span>
             <span>-24</span>
             <span>-18</span>
@@ -226,18 +226,18 @@ export class Inspector {
 
       <!-- Active Diagnostics & 1-Click Fixes -->
       ${findings.length > 0 ? `
-        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
-          <span style="font-size: 11px; font-weight: 700; color: var(--status-error);">⚠️ ACTIVE FINDINGS (${findings.length})</span>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+          <span style="font-size: 12px; font-weight: 800; color: var(--status-error);">⚠️ ACTIVE FINDINGS (${findings.length})</span>
           ${findings.map((f, i) => `
-            <div class="inspector-finding-card" style="background: rgba(255, 51, 102, 0.1); border: 1px solid var(--status-error); border-radius: var(--radius-sm); padding: 8px; font-size: 11px;">
+            <div class="inspector-finding-card" style="background: rgba(255, 51, 102, 0.1); border: 1px solid var(--status-error); border-radius: var(--radius-sm); padding: 10px; font-size: 13px;">
               <strong style="color: var(--text-primary);">${f.code}</strong>
-              <p style="color: var(--text-secondary); margin: 4px 0 6px 0; font-size: 10.5px;">${f.message}</p>
-              ${f.fix ? `<button class="tool-btn primary btn-apply-fix" data-finding-idx="${i}" style="font-size: 10px; padding: 3px 8px;">⚡ ${f.fix.label} →</button>` : ''}
+              <p style="color: var(--text-secondary); margin: 4px 0 8px 0; font-size: 12px; line-height: 1.5;">${f.message}</p>
+              ${f.fix ? `<button class="tool-btn primary btn-apply-fix" data-finding-idx="${i}" style="font-size: 11px; padding: 4px 10px;">⚡ ${f.fix.label} →</button>` : ''}
             </div>
           `).join('')}
         </div>
       ` : `
-        <div style="background: rgba(0, 230, 118, 0.1); border: 1px solid var(--status-success); border-radius: var(--radius-sm); padding: 8px; font-size: 11px; color: var(--status-success);">
+        <div style="background: rgba(0, 230, 118, 0.1); border: 1px solid var(--status-success); border-radius: var(--radius-sm); padding: 10px; font-size: 13px; color: var(--status-success);">
           ✓ Signal routing on this node is clean and validated.
         </div>
       `}
@@ -452,15 +452,15 @@ export class Inspector {
   renderNodeSpecificInspectorControls(node) {
     if (node.category === 'input') {
       return `
-        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13.5px;">
           <span>Preamp Gain:</span>
           <span style="font-family: var(--font-mono); color: var(--color-vocal); font-weight:700;">${node.getProperty('gain')} dB</span>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13.5px;">
           <span>+48V Phantom:</span>
           <span style="font-family: var(--font-mono); color: ${node.getProperty('phantom') ? 'var(--status-error)' : 'var(--text-muted)'}; font-weight:700;">${node.getProperty('phantom') ? 'ON (ACTIVE)' : 'OFF'}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13.5px;">
           <span>Low-Cut HPF:</span>
           <span style="font-family: var(--font-mono);">${node.getProperty('hpf') ? `${node.getProperty('hpf')} Hz` : 'OFF'}</span>
         </div>
@@ -469,15 +469,15 @@ export class Inspector {
 
     if (node.category === 'strip') {
       return `
-        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13.5px;">
           <span>Input Source:</span>
           <span style="font-family: var(--font-mono); color: ${node.getProperty('rtnsw') ? 'var(--color-playback)' : 'var(--color-vocal)'}; font-weight:700;">${node.getProperty('rtnsw') ? 'USB DAW Return' : 'Analog XLR In'}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13.5px;">
           <span>Fader Level:</span>
           <span style="font-family: var(--font-mono); color: var(--text-primary); font-weight:700;">${node.getProperty('fader')} dB</span>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13.5px;">
           <span>Stereo Link:</span>
           <span style="font-family: var(--font-mono);">${node.getProperty('isStereoPair') ? 'LINKED (STEREO)' : 'MONO'}</span>
         </div>
@@ -486,7 +486,7 @@ export class Inspector {
 
     if (node.category === 'usb_send') {
       return `
-        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13.5px;">
           <span>Tap Point:</span>
           <span style="font-family: var(--font-mono); color: var(--color-keys); font-weight:700;">${node.getProperty('tapPoint')}</span>
         </div>
@@ -496,24 +496,24 @@ export class Inspector {
     if (node.category === 'daw') {
       const plugins = node.getProperty('plugins', []);
       return `
-        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13.5px;">
           <span>Output Mode:</span>
           <span style="font-family: var(--font-mono); color: var(--color-playback); font-weight:700;">${node.getProperty('isStereoOut') ? 'Stereo (Dual L/R)' : 'Mono (1-Ch)'}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13.5px;">
           <span>Est. Latency:</span>
           <span style="font-family: var(--font-mono); color: var(--status-success);">2.8 ms (64 smp @ 48k)</span>
         </div>
-        <div style="font-size: 11px; margin-top: 4px;">
+        <div style="font-size: 13px; margin-top: 6px;">
           <span style="color: var(--text-muted);">Active Plugins:</span>
-          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--color-vocal); margin-top: 2px;">${plugins.length > 0 ? plugins.join(' ➔ ') : 'None'}</div>
+          <div style="font-family: var(--font-mono); font-size: 12px; color: var(--color-vocal); margin-top: 3px;">${plugins.length > 0 ? plugins.join(' ➔ ') : 'None'}</div>
         </div>
       `;
     }
 
     if (node.category === 'main' || node.category === 'bus') {
       return `
-        <div style="display: flex; justify-content: space-between; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13.5px;">
           <span>Master Fader:</span>
           <span style="font-family: var(--font-mono); color: var(--color-main); font-weight:700;">${node.getProperty('masterFader')} dB</span>
         </div>

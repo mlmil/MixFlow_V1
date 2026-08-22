@@ -6,8 +6,8 @@
   overflow: hidden;
   background-color: var(--bg-darkest);
   background-image: 
-    radial-gradient(circle, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
-  background-size: 24px 24px;
+    radial-gradient(circle, rgba(255, 255, 255, 0.08) 1.2px, transparent 1.2px);
+  background-size: 26px 26px;
 }
 
 .canvas-viewport {
@@ -34,7 +34,7 @@
 .wire-path {
   fill: none;
   stroke: var(--color-wire-default);
-  stroke-width: 3.5px;
+  stroke-width: 3.8px;
   stroke-linecap: round;
   transition: stroke 0.15s ease, stroke-width 0.15s ease;
   pointer-events: stroke;
@@ -42,8 +42,8 @@
 }
 
 .wire-path:hover {
-  stroke-width: 5.5px;
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
+  stroke-width: 6px;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
 }
 
 .wire-active {
@@ -58,7 +58,7 @@
 
 .wire-pending {
   stroke: var(--color-vocal);
-  stroke-width: 3px;
+  stroke-width: 3.5px;
   stroke-dasharray: 4 4;
   pointer-events: none !important;
 }
@@ -69,13 +69,14 @@
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-node);
-  min-width: 260px;
-  max-width: 360px;
+  min-width: 280px;
+  max-width: 380px;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border-subtle);
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
   z-index: 10;
+  font-size: var(--text-sm);
 }
 
 .graph-node:hover {
@@ -90,16 +91,16 @@
 
 .graph-node.node-error {
   border-color: var(--status-error);
-  box-shadow: 0 0 15px rgba(255, 51, 102, 0.4), 0 0 0 1px var(--status-error);
+  box-shadow: 0 0 16px rgba(255, 51, 102, 0.45), 0 0 0 1px var(--status-error);
 }
 
 .graph-node.node-warning {
   border-color: var(--status-warning);
-  box-shadow: 0 0 15px rgba(255, 171, 0, 0.3), 0 0 0 1px var(--status-warning);
+  box-shadow: 0 0 16px rgba(255, 171, 0, 0.35), 0 0 0 1px var(--status-warning);
 }
 
 .node-header {
-  padding: 10px 14px;
+  padding: 12px 16px;
   background: var(--bg-dark);
   border-top-left-radius: var(--radius-lg);
   border-top-right-radius: var(--radius-lg);
@@ -122,44 +123,46 @@
 }
 
 .node-badge {
-  width: 10px;
-  height: 10px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   background: var(--color-wire-default);
+  flex-shrink: 0;
 }
 
 .node-title {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--text-base);
+  font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 0.3px;
 }
 
 .node-category {
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-family: var(--font-mono);
   color: var(--text-muted);
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .node-body {
-  padding: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 /* Ports & Sockets */
 .ports-container {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 18px;
 }
 
 .ports-column {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   flex: 1;
 }
 
@@ -175,15 +178,27 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-family: var(--font-mono);
   color: var(--text-secondary);
   position: relative;
+  min-height: 26px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background-color 0.12s ease;
+}
+
+.port-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
 }
 
 .port-socket {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
   border-radius: 50%;
   background: var(--bg-darkest);
   border: 2px solid var(--color-wire-default);
@@ -192,14 +207,14 @@
 }
 
 .port-socket:hover {
-  transform: scale(1.35);
+  transform: scale(1.4);
   border-color: #fff;
   background-color: var(--color-vocal);
 }
 
 .port-socket.connected {
   background-color: var(--color-vocal);
-  box-shadow: 0 0 6px var(--color-vocal);
+  box-shadow: 0 0 7px var(--color-vocal);
 }
 
 .port-label {
@@ -211,13 +226,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  font-size: 11px;
+  gap: 10px;
+  font-size: var(--text-xs);
 }
 
 .node-control-row label {
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--text-xs);
+  font-weight: 500;
 }
 
 .node-input, .node-select {
@@ -225,8 +241,8 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  padding: 4px 8px;
-  font-size: 11px;
+  padding: 6px 10px;
+  font-size: var(--text-xs);
   font-family: var(--font-mono);
   outline: none;
   width: 100%;
@@ -239,13 +255,13 @@
 .switch-toggle {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
 }
 
 .switch-box {
-  width: 32px;
-  height: 18px;
+  width: 36px;
+  height: 20px;
   border-radius: 10px;
   background: var(--bg-input);
   border: 1px solid var(--border-subtle);
@@ -254,8 +270,8 @@
 }
 
 .switch-knob {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--text-muted);
   position: absolute;
@@ -270,7 +286,7 @@
 }
 
 .switch-toggle.active .switch-knob {
-  transform: translateX(14px);
+  transform: translateX(16px);
   background: var(--color-vocal);
 }
 
@@ -279,15 +295,15 @@
   border: 1px solid var(--border-subtle);
   color: var(--text-muted);
   border-radius: var(--radius-sm);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 6px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .phantom-btn.active {
-  background: rgba(255, 51, 102, 0.2);
+  background: rgba(255, 51, 102, 0.25);
   border-color: var(--status-error);
   color: var(--status-error);
   box-shadow: 0 0 8px rgba(255, 51, 102, 0.4);
